@@ -136,10 +136,10 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
            self.elastixBinPath    = self.elastixBinPath      + ".exe"
            self.transformixBinPath =self.transformixBinPath  + ".exe"
            self.elxInvTransBinPath = self.elxInvTransBinPath + ".exe"  
-           elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/9lBF8XdgSssKoQB/download")   
+           elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/QlG8CMrKoujZdqo/download")   
            self.noOutput= " > nul"   
            winOS=1    
-           downSz= 0    
+           downSz= 500    
         #endif
         
         #check if VisSimTools folder is found 
