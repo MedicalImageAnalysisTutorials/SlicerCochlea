@@ -1,4 +1,5 @@
 **Cochlea Image Analysis**
+
 This is a [3D Slicer](https://github.com/Slicer/Slicer) plugin that uses [elastix toolbox](https://github.com/SuperElastix/elastix) for Multi-modal cochlea Images registration, segmentation and analysis. More information can be found [here](https://mtixnat.uni-koblenz.de). The elastix parameters file can be found [here](www.github.com)
 
 This project contains two modules:
