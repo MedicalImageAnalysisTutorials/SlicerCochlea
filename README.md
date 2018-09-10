@@ -1,8 +1,7 @@
-**CochleaImageAnalysis**
+**Cochlea Image Analysis**
+This is a [3D Slicer](https://github.com/Slicer/Slicer) plugin that uses [elastix toolbox](https://github.com/SuperElastix/elastix) for Multi-modal cochlea Images registration, segmentation and analysis. More information can be found [here](https://mtixnat.uni-koblenz.de). The elastix parameters file can be found [here](www.github.com)
 
-Multi-modal cochlea Images registration, segmentation and analysis. More information can be found [here](https://mtixnat.uni-koblenz.de).
-
-This project contains 3D Slicer plugins for cochlea images analysis. There are two plugins:
+This project contains two modules:
 
   1. Cochlea image registration.
   2. Cochlea image segmentation and measuerments. 
@@ -15,7 +14,8 @@ Please cite our papers:
 *  Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Friedrich Lisseck and Roland Jacob, (2017): ACIR: automatic cochlea image registration. In: Proceedings SPIE Medical Imaging 2017: Image Processing;. SPIE. Bd. 10133. S. 10133p1-10133p5. [link](http://spie.org/Publications/Proceedings/Paper/10.1117/12.2254396)
 
 
-Please share your dataset with us. 
+Please share your cochlea dataset with us. 
 
 Your contribution is welcome! 
+
 

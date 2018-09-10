@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+ <meta charset="UTF-8">
+ <meta name="description" content="Uni Koblenz Mti Xnat">
+ <meta name="keywords" content="Mti Xnat Uni Koblenz" />
+ <meta name="DC.title" content="undefined" />
+ <meta name="geo.region" content="DE-RLP" />
+ <meta name="geo.placename" content="Koblenz" />
+ <meta name="geo.position" content="50.73743;7.098207" />
+ <meta name="ICBM" content="50.73743, 7.098207" />
+
+<link rel="stylesheet" href="style.css">
+
+<title>Slicer Cochlea Documentation</title>
+   
+</head>
+<body>
+
+
+<div id="mainContainer">
+
+         <h2>	Slicer Cochlea Documentation   </h2>                  
+
+<p>The cochlea is a very important part of the inner ear. It is responsible for the transfer of audio signals to the brain. </p>
+
+<p>There are two modules in this extension. The first module, Cochlea Registration, registers and fuses cochlea images from different modalities. The second plugin, Cochlea Segmenttaion, segment out the cochlea structure, scala tympani and other scalae (media and vestibuli) in addition to measure the length and the size of the scala tympani. Both modules required a few seconds to complete the tasks. They use a cusomised set of parameters for elastix toolbox. The extension will download elastix binaries and other necessary files so it will take some minutes when use first time. For testing, cochlea sample datasets can be downloaded using Slicer Data Store module. 
+You are welcome to contribute by optimising the code or sharing your cochlea dataset. For questions or problems using this extension please post in the gitHub issue or in Slicer forum.  
+For more details please read the related publications: </p>
+<ol>
+  <li>Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Rania Helal, Friedrich Lisseck and Roland Jacob, (2018), Automatic Cochlear Length and Volume Size Estimation, Accepted in: First  International Workshop on Context-Aware Operating Theater OR 2, MICCAI 2018, Granada Spain.</li>
+  <li>Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Roland Jacob, (2018), Automatic Cochlea Multi-modal Images Segmentation Using Adaptive Stochastic Gradient Descent. In: CI2018 DC Emerging Issues in Cochlear Implantation, Washington DC, USA.
+<a style="font-family:Helvetica;" href="https://cdn.ymaws.com/www.acialliance.org/resource/resmgr/CI2018/CI2018_PPT/CI2018_DC_Podium_Abstracts.pdf" target="contents" > (link).</a>
+</li>
+  <li>Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus and Roland Jacob, (2017): Automatic Cochlea Segmentation Using Diffusion Snakes. In: 15th Symposium on Cochlear Implants in Children, CI 2017, San Francisco, USA
+<a style="font-family:Helvetica;" href="https://cdn.ymaws.com/www.acialliance.org/resource/resmgr/ci2017/CI2017_PPT/CI2017_Podium_Abstracts.pdf"  target="contents" > (link). </a> 
+</li>
+  <li>Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Friedrich Lisseck and Roland Jacob, (2017): ACIR: automatic cochlea image registration. In: Proceedings SPIE Medical Imaging 2017: Image Processing;. SPIE. Bd. 10133. S. 10133p1-10133p5 
+<a style="font-family:Helvetica;" href="http://spie.org/Publications/Proceedings/Paper/10.1117/12.2254396"  target="contents" > (link). </a> 
+</li>
+  <li>Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Friedrich Lissek, Roland Jacob(2016): Automatic Multimodal Registration and Fusion of 3D Human Cochlea Images. In: 14th International Conference on Cochlear Implants, Toronto, Canada. S. 511-514. <br/><br/></li>
+</ol>
+<p> </p>
+<p> <b>How to use:</b> </p>
+<p> The following sections give instructions how to use these modules. A more detailed video demo can be found in the links bellow these sections.  </p>
+<p> <b>Cochlea registration:</b> </p>
+<p> 1. Load the registration module under VisSimTools.  </p>
+       <img src="images/Reg01.png"  style="width:1200px;height:900px;" />
+<p> 2. Select the fixed and the moving images.  </p>
+       <img src="images/Reg02.png"  style="width:1200px;height:900px;" />
+<p> 3. Click on "Pick cochlea location in fixed image".</p>
+       <img src="images/Reg03.png"  style="width:1200px;height:900px;" />
+<p> 4. Click inside the cochlea region. </p>
+       <img src="images/Reg04.png"  style="width:1200px;height:900px;" />
+<p> 5. repeat steps 3 and 4 using "Pick cochlea location in moving image".</p>
+<p> 6. Click Run button. </p>
+       <img src="images/Reg05.png"  style="width:1200px;height:900px;" />
+<p> 7. In few seconds you will see the registered and fused images. </p>
+       <img src="images/Reg06.png"  style="width:1200px;height:900px;" />
+<br><br><br>
+<p> <b>Cochlea Segmentation:</b> </p>
+<p> 1. Load the Segmentation module under VisSimTools.  </p>
+       <img src="images/Seg01.png"  style="width:1200px;height:900px;" />
+<p> 2. Click on "Pick cochlea location in input image". Then click inside the cochlea region.</p>
+       <img src="images/Seg03.png"  style="width:1200px;height:900px;" />
+<p> 3. Click Run button. In few seconds you will see the segmentation and the analysis result.</p>
+       <img src="images/Seg04.png"  style="width:1200px;height:900px;" />
+<p> 4. You may modify the length by clicking on the end-points in the 3D view then click on Update Length. This helps to correct errors or to get different mesuerments e.g. interior, center or exterior lengths.  </p>
+       <img src="images/Seg05.png"  style="width:1200px;height:900px;" />
+<br><br><br>
+ 
+<br><br><br>
+<p> <b>Resources: </b>
+<p>  <a href="downloads.html"  >Demo.</a>
+<p>  <a href="downloads.html"  >Source-codes and datasets.</a>
+ 
+</div>
+
+	 
+</body>
+
+</html>
