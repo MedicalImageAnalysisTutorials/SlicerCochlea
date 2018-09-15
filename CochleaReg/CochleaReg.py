@@ -37,6 +37,7 @@ from PythonQt import BoolResult
 from shutil import copyfile
  
 #TODO:
+# - install requirements automatically     
 # - Checking if all above are needed 
 # - Cleaning, optimizing, commenting.  
 # - Using smaller size binaries or the SlierElastix binaries.   
@@ -111,8 +112,8 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
         self.elastixBinPath    =  self.vissimPath + "/sw/elastix-4.9.0/bin/elastix"
         self.transformixBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/transformix"
         self.elxInvTransBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/elxInvertTransform"
-        elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/OX42JCcNKIA8ZoP/download")      
-        othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/eGumpAZS1A3yNAO/download")   
+        self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/OX42JCcNKIA8ZoP/download")      
+        self.othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/eGumpAZS1A3yNAO/download")   
           
         self.noOutput= " >> /dev/null"
 
@@ -136,7 +137,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
            self.elastixBinPath    = self.elastixBinPath      + ".exe"
            self.transformixBinPath =self.transformixBinPath  + ".exe"
            self.elxInvTransBinPath = self.elxInvTransBinPath + ".exe"  
-           elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/QlG8CMrKoujZdqo/download")   
+           self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/QlG8CMrKoujZdqo/download")   
            self.noOutput= " > nul"   
            winOS=1    
            downSz= 500    
@@ -708,8 +709,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
 
     # Download VisSimTools folder if not found 
     def checkVisSimTools(self):
-        # TODO: optimise this part to download only the missing files 
-        
+        # TODO: optimise this part to download only the missing files        
         # Check if elastix exist or download it 
         if isfile(self.elastixBinPath.strip()): 
            print("elastix binaries are found in " + self.elastixBinPath )
@@ -723,10 +723,10 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
             msg.exec_()
             try:                               
                 print("Downloading VisSimTools elastix ...")
-                cmd=" wget --no-check-certificate ""https://mtixnat.uni-koblenz.de/owncloud/index.php/s/3bYztVkSrJxdpDz/download"" -O ~/VisSimToolsTmp.zip"               
+                #cmd=" wget --no-check-certificate ""https://mtixnat.uni-koblenz.de/owncloud/index.php/s/3bYztVkSrJxdpDz/download"" -O ~/VisSimToolsTmp.zip"               
                 vissimZip = expanduser("~/VisSimToolsTmp.zip")
                 with open(vissimZip ,'wb') as f:
-                     uFile = urllib2.urlopen(elastixWebLink)              
+                     uFile = urllib2.urlopen(self.elastixWebLink)              
                      chunk = 10024096
                      while 1:
                            data = uFile.read(chunk)
@@ -740,12 +740,12 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
                      #endWhile                               
                 print("Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
-                zip_ref.extractall(self.vissimPath)
+                zip_ref.extractall(expanduser("~/"))
                 zip_ref.close()  
                 #remove the downloaded zip file     
                 os.remove(vissimZip)                                            
             except Exception as e:
-                  print("Error: can not download and extract VisSimTools ...")
+                  print("Error: can not download and extract VisSimTools Elastix ...")
                   print(e)   
                   return -1
             #end try-except 
@@ -765,7 +765,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
                 print("Downloading VisSimTools others ...")
                 vissimZip = expanduser("~/VisSimToolsTmp.zip")
                 with open(vissimZip ,'wb') as f:
-                     uFile = urllib2.urlopen(othersWebLink)              
+                     uFile = urllib2.urlopen(self.othersWebLink)              
                      chunk = 10024096
                      while 1:
                            data = uFile.read(chunk)
@@ -779,7 +779,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
                      #endWhile                               
                 print("Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
-                zip_ref.extractall(self.vissimPath)
+                zip_ref.extractall(expanduser("~/"))
                 zip_ref.close()  
                 #remove the downloaded zip file     
                 os.remove(vissimZip)   

@@ -38,6 +38,7 @@ from PythonQt import BoolResult
 from shutil import copyfile
 
 #TODO:
+# - install requirements automatically     
 # - Checking if all above are needed 
 # - Cleaning, optimizing, commenting.  
 # - Using smaller size binaries or the SlierElastix binaries.   
@@ -117,8 +118,8 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
         self.elastixBinPath    =  self.vissimPath + "/sw/elastix-4.9.0/bin/elastix"
         self.transformixBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/transformix"
         self.elxInvTransBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/elxInvertTransform"
-        elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/OX42JCcNKIA8ZoP/download")      
-        othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/16X77q8Uf9GKUa9/download")   
+        self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/OX42JCcNKIA8ZoP/download")      
+        self.othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/16X77q8Uf9GKUa9/download")   
         self.noOutput= " >> /dev/null"
 
         # Set default output directory
@@ -143,7 +144,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
            self.elastixBinPath    = self.elastixBinPath      + ".exe"
            self.transformixBinPath =self.transformixBinPath  + ".exe"
            self.elxInvTransBinPath = self.elxInvTransBinPath + ".exe"  
-           elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/QlG8CMrKoujZdqo/download")   
+           self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/QlG8CMrKoujZdqo/download")   
            self.noOutput= " > nul"   
            winOS=1    
            downSz= 500    
@@ -764,52 +765,24 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
         print("Length is updated !!! ")
         
     def checkVisSimTools(self):
+        # TODO: optimise this part to download only the missing files        
         # Check if elastix exist or download it 
         if isfile(self.elastixBinPath.strip()): 
            print("elastix binaries are found in " + self.elastixBinPath )
         else: 
-            print("VisSimTools folder is missing, trying to download ... ")
+            print("elastix binaries are missing, trying to download ... ")
             msg = qt.QMessageBox()
             msg.setIcon(qt.QMessageBox.Information)
-            msg.setText("VisSimTools folder is missing!")
-            msg.setInformativeText("VisSimTools will be downloaded, this will take some time, please wait!")
+            msg.setText("elastix binaries are missing!")
+            msg.setInformativeText("VisSimTools elastix binaries will be downloaded, this may take some time, please wait!")
             msg.setWindowTitle("VisSimTools")
             msg.exec_()
-            try:
-                # QT input dialog for destination??
-                ok = BoolResult()
-                t  = qt.QInputDialog.getText(slicer.util.mainWindow(), "Doenloading VisSimTools",  "Destination: (" + sel.downSz +" MB free space is required)",0,self.vissimPath, ok)        
-                if (ok and not (self.vissimPath.strip()==t.strip()) ) :        
-                   fnm= inspect.getfile(inspect.currentframe()) # script filename (usually with path)
-                   tmp=os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/tstReducing.tmp"
-                   print(t)        
-                   print fnm
-                   print tmp 
-                   #modifiy tmp
-                   f1 = open(fnm,'r')
-                   f2 = open(tmp, "w+")
-                   for line in f1:
-                       if ('self.vissimPath    = expanduser("~/VisSimTools")' in line) and not ('if' in line):
-                          print("line is found and changed to ... " + t)
-                          f2.write('self.vissimPath    = ' + t )
-                       else:
-                          f2.write(line) # no need for new line as it is included in the original file
-                   #endif
-                   f1.close()
-                   f2.close()
-                   try:
-                      copyfile(tmp,fnm)         
-                   except Exception as e:
-                      print(e)
-                   #endtry
-                   qt.QMessageBox.warning(slicer.util.mainWindow(),'Done!', "Restart Slicer please!")                    
-                #endif 
-                               
-                print("Downloading VisSimTools ...")
-                #cmd= wget --no-check-certificate "https://mtixnat.uni-koblenz.de/owncloud/index.php/s/3bYztVkSrJxdpDz/download" -O ~/VisSimToolsTmp.zip               
-                elastixZip = expanduser("~/VisSimToolsTmp.zip")
-                with open(elastixZip ,'wb') as f:
-                     uFile = urllib2.urlopen(elastixWebLink)              
+            try:                               
+                print("Downloading VisSimTools elastix ...")
+                #cmd=" wget --no-check-certificate ""https://mtixnat.uni-koblenz.de/owncloud/index.php/s/3bYztVkSrJxdpDz/download"" -O ~/VisSimToolsTmp.zip"               
+                vissimZip = expanduser("~/VisSimToolsTmp.zip")
+                with open(vissimZip ,'wb') as f:
+                     uFile = urllib2.urlopen(self.elastixWebLink)              
                      chunk = 10024096
                      while 1:
                            data = uFile.read(chunk)
@@ -822,23 +795,64 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
                            print "Reading ...  %s bytes"%len(data) 
                      #endWhile                               
                 print("Extracting to user home ")
-                zip_ref = zipfile.ZipFile(elastixZip, 'r')
-                zip_ref.extractall(self.vissimPath)
+                zip_ref = zipfile.ZipFile(vissimZip, 'r')
+                zip_ref.extractall(expanduser("~/"))
                 zip_ref.close()  
                 #remove the downloaded zip file     
-                os.remove(elastixZip)   
+                os.remove(vissimZip)                                            
+            except Exception as e:
+                  print("Error: can not download and extract VisSimTools Elastix ...")
+                  print(e)   
+                  return -1
+            #end try-except 
+        #endif
+        # check if other files exist
+        if isfile(self.parsPath.strip()): 
+           print("Other files are found !" )
+        else: 
+            print("Other files are  missing, trying to download ... ")
+            msg = qt.QMessageBox()
+            msg.setIcon(qt.QMessageBox.Information)
+            msg.setText("Other files are missing!")
+            msg.setInformativeText("VisSimTools other files will be downloaded, this may take some time, please wait!")
+            msg.setWindowTitle("VisSimTools")
+            msg.exec_()
+            try:                               
+                print("Downloading VisSimTools others ...")
+                vissimZip = expanduser("~/VisSimToolsTmp.zip")
+                with open(vissimZip ,'wb') as f:
+                     uFile = urllib2.urlopen(self.othersWebLink)              
+                     chunk = 10024096
+                     while 1:
+                           data = uFile.read(chunk)
+                           f.write(data)                   
+                           if not data:
+                              f.close()                               
+                              print "done!"
+                              break
+                           #endIf
+                           print "Reading ...  %s bytes"%len(data) 
+                     #endWhile                               
+                print("Extracting to user home ")
+                zip_ref = zipfile.ZipFile(vissimZip, 'r')
+                zip_ref.extractall(expanduser("~/"))
+                zip_ref.close()  
+                #remove the downloaded zip file     
+                os.remove(vissimZip)   
                 # change permission of bin folder for Linux
                 if winOS==0:   
-                   print("Making binaries executable  ")
+                   print("Making binaries executable for Linux ")
                    md=  stat.S_IRWXU | stat.S_IRGRP | stat.S_IROTH |stat.S_IXGRP |stat.S_IXOTH
                    os.chmod(self.elastixBinPath.strip()    ,  md)
                    os.chmod(self.transformixBinPath.strip(),  md)
                    os.chmod(self.elxInvTransBinPath.strip(),  md)
-                #endif                                           
-                msg.setText("VisSimTools folder is found!")
-                msg.setInformativeText("VisSimTools is downloaded and ready to use!")
+                #endif 
+                msg.setInformativeText("VisSimTools folder is downloaded and ready to use!")
                 msg.exec_()                      
+                                          
             except Exception as e:
                   print("Error: can not download and extract VisSimTools ...")
                   print(e)   
+                  return -1
+            #end try-except  
                               
