@@ -130,8 +130,8 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
         self.croppingLength = 10   
         print("      Cropping Length: " + str(self.croppingLength))
         # download size of VisSimTools folder in MB
-        downSz= 160    
-        winOS=0        
+        self.downSz= 160    
+        self.winOS=0        
         # windows
         if platform.system()=='Windows':
            self.elastixBinPath    = self.elastixBinPath      + ".exe"
@@ -140,7 +140,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
            self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/QlG8CMrKoujZdqo/download")   
            self.noOutput= " > nul"   
            winOS=1    
-           downSz= 500    
+           self.downSz= 500    
         #endif
         
         #check if VisSimTools folder is found 
@@ -784,7 +784,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
                 #remove the downloaded zip file     
                 os.remove(vissimZip)   
                 # change permission of bin folder for Linux
-                if winOS==0:   
+                if self.winOS==0:   
                    print("Making binaries executable for Linux ")
                    md=  stat.S_IRWXU | stat.S_IRGRP | stat.S_IROTH |stat.S_IXGRP |stat.S_IXOTH
                    os.chmod(self.elastixBinPath.strip()    ,  md)
