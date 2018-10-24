@@ -112,8 +112,8 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
         self.elastixBinPath    =  self.vissimPath + "/sw/elastix-4.9.0/bin/elastix"
         self.transformixBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/transformix"
         self.elxInvTransBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/elxInvertTransform"
-        self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/OX42JCcNKIA8ZoP/download")      
-        self.othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/eGumpAZS1A3yNAO/download")   
+        self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/VoxfbJ1kHw0EAQ6/download")      
+        self.othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/x6kts1R4f5RkDcN/download")   
           
         self.noOutput= " >> /dev/null"
 
@@ -137,7 +137,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
            self.elastixBinPath    = self.elastixBinPath      + ".exe"
            self.transformixBinPath =self.transformixBinPath  + ".exe"
            self.elxInvTransBinPath = self.elxInvTransBinPath + ".exe"  
-           self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/QlG8CMrKoujZdqo/download")   
+           self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TAc8toxaajSdfy7/download")   
            self.noOutput= " > nul"   
            winOS=1    
            self.downSz= 500    
