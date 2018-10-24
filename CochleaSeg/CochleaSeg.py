@@ -22,14 +22,6 @@
 #                                                                                     #  
 #======================================================================================
 
-try:
-    # for Python2
-    import Tkinter   ## capitalized T in Tkinter 
-except ImportError:
-    # for Python3
-    import tkinter   ## lowercase 't' in tkinter here
-
-import tkFileDialog
 import os, re , datetime, time ,shutil, unittest, logging, zipfile, urllib2, stat,  inspect
 import sitkUtils, sys ,math, platform  
 import  numpy as np, SimpleITK as sitk
