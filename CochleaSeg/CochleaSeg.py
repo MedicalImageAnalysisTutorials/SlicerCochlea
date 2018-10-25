@@ -429,10 +429,13 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
         sr = sr[1:-1]
         self.inputPoint = map(int, sr.split(','))
 
-        #remove old files
-        shutil.rmtree(self.outputPath) 
+        #remove old files if exist
+        if os.path.isdir(self.outputPath.strip()): 
+           print("removing old output folder!")
+           shutil.rmtree(self.outputPath) 
+        #endif   
         os.mkdir(self.outputPath)      
-         
+
         Styp="Dv"
         side="L" 
 
