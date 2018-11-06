@@ -27,9 +27,17 @@
 
 <p>The cochlea is a very important part of the inner ear. It is responsible for the transfer of audio signals to the brain. </p>
 
-<p>There are two modules in this extension. The first module, Cochlea Registration, registers and fuses cochlea images from different modalities. The second plugin, Cochlea Segmenttaion, segment out the cochlea structure, scala tympani and other scalae (media and vestibuli) in addition to measure the length and the size of the scala tympani. Both modules required a few seconds to complete the tasks. They use a cusomised set of parameters for elastix toolbox. The extension will download elastix binaries and other necessary files so it will take some minutes when use first time. For testing, cochlea sample datasets can be downloaded using Slicer Data Store module. 
-You are welcome to contribute by optimising the code or sharing your cochlea dataset. For questions or problems using this extension please post in the gitHub issue or in Slicer forum.  
-For more details please read the related publications: </p>
+<p>There are two modules in this extension:</p>
+<ul>
+  <li><b>Cochlea Registration</b>: Register and fuse cochlea images from different modalities.
+  <li><b>Cochlea Segmentation</b>: Segment out the cochlea structure, scala tympani and other scalae (media and vestibuli) and measure the length and the size of the scala tympani.</li>
+</ul>
+
+<p>Both modules required a few seconds to complete the tasks. They use a customized set of parameters from <a href="https://github.com/SuperElastix/elastix">elastix toolbox</a> (itself using <a href="https://itk.org/">Insight Toolkit (ITK)</a>). The extension will download elastix binaries and other necessary files so it will take some minutes when use first time. For testing, cochlea sample datasets can be downloaded using Slicer Data Store module.</p>
+
+<p>You are welcome to contribute by optimising the code or sharing your cochlea dataset. For questions or problems using this extension please post in the <a href="https://github.com/MedicalImageAnalysisTutorials/SlicerCochlea/issues">GitHub issue tracker</a> or on the <a href="https://discourse.slicer.org">Slicer Discussion Forum</a>.
+
+<p>For more details please read the related publications: </p>
 <ol>
   <li>Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Rania Helal, Friedrich Lisseck and Roland Jacob, (2018), Automatic Cochlear Length and Volume Size Estimation, Accepted in: First  International Workshop on Context-Aware Operating Theater OR 2, MICCAI 2018, Granada Spain.</li>
   <li>Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Roland Jacob, (2018), Automatic Cochlea Multi-modal Images Segmentation Using Adaptive Stochastic Gradient Descent. In: CI2018 DC Emerging Issues in Cochlear Implantation, Washington DC, USA.
