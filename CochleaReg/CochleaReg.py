@@ -170,6 +170,13 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
     self.movingFiducialBtn.connect('clicked(bool)', lambda: self.onInputFiducialBtnClick("moving"))
     self.mainFormLayout.addRow( self.movingFiducialBtn, self.movingPointEdt)    
         
+    # Add check box for disabling colors in the result of the registration
+    self.colorsChkBox = qt.QCheckBox()
+    self.colorsChkBox.text = "Disable colors"
+    self.colorsChkBox.checked = False
+    self.colorsChkBox.stateChanged.connect(self.OnColorsChkBoxChange)
+    self.mainFormLayout.addRow(self.colorsChkBox)
+
     # Create a button to run registration
     self.applyBtn = qt.QPushButton("Run")
     self.applyBtn.setFixedHeight(50)
@@ -208,6 +215,11 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
         self.movingFiducialBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
     #endif    
     
+
+  # An option to control results displaying
+  def OnColorsChkBoxChange(self):
+        self.logic.fuseWithOutColor(self.colorsChkBox.checked)
+                        
   def onApplyBtnClick(self):
     self.runBtn.setText("...please wait")
     self.runBtn.setStyleSheet("QPushButton{ background-color: red  }")
@@ -266,7 +278,11 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
 
     #Resampling parameters, default [0.125, 0.125,0.125]
     self.RSxyz =  self.segLogic.RSxyz
-       
+
+    # color is displayed by default
+    self.firstNodeColor  = slicer.modules.colors.logic().GetColorTableNodeID(20)
+    self.secondNodeColor = slicer.modules.colors.logic().GetColorTableNodeID(16)
+
     # windows
     if platform.system()=='Windows':
            self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TAc8toxaajSdfy7/download")   
@@ -579,6 +595,15 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
         modifiedTransFile.close()
         return transFinalPath
 
+  def fuseWithOutColor(self, disableColor):
+        if not disableColor:
+          # Green and Magenta colors 
+          self.firstNodeColor  = slicer.modules.colors.logic().GetColorTableNodeID(20)
+          self.secondNodeColor = slicer.modules.colors.logic().GetColorTableNodeID(16)
+        else:
+          self.firstNodeColor  = slicer.modules.colors.logic().GetColorTableNodeID(1)
+          self.secondNodeColor = slicer.modules.colors.logic().GetColorTableNodeID(1)
+       #endif
   #--------------------------------------------------------------------------------------------
   #                       Display Results
   #--------------------------------------------------------------------------------------------
@@ -628,13 +653,11 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
 
         # The lookup tables for each image are applied. Green is assigned to the first Image, 
         # while magenta is assigned to the second  image.
-        magentaNode = slicer.modules.colors.logic().GetColorTableNodeID(20)
-        greenNode = slicer.modules.colors.logic().GetColorTableNodeID(16)
         self.s1DisplayNode = firstNode.GetDisplayNode()
         self.s2DisplayNode = secondNode.GetDisplayNode()
         #resultDisplayNode = resultNode.GetDisplayNode()
-        self.s1DisplayNode.SetAndObserveColorNodeID(greenNode)
-        self.s2DisplayNode.SetAndObserveColorNodeID(magentaNode)
+        self.s1DisplayNode.SetAndObserveColorNodeID(self.firstNodeColor)
+        self.s2DisplayNode.SetAndObserveColorNodeID(self.secondNodeColor)
         #resultDisplayNode.SetAndObserveColorNodeID(magentaNode)
 
         # Fit slices to window
