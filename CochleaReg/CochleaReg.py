@@ -776,11 +776,17 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
     #   imgLaWeb = "http://slicer.kitware.com/midas3/download/item/381221/P100001_DV_L_a"
     #   imgLbWeb=  "http://slicer.kitware.com/midas3/download/item/381255/P100001_DV_L_b" 
 
-    fixedFnm   = self.logic.outputPath +"/imgF.nrrd"
-    movingFnm  = self.logic.outputPath +"/imgM.nrrd"
+    fixedFnm   = self.logic.vissimPath +"/imgF.nrrd"
+    movingFnm  = self.logic.vissimPath +"/imgM.nrrd"
+
+	# remove testing nodes if found:
+    try:
+        os.remove(fixedFnm)     
+        os.remove(movingFnm)     
+    except Exception as e:
+				  print("Downloading cochlea sample images ...")
 
     try:         
-        print("Downloading cochlea sample images ...")
         import urllib
         imgLaWebLink = "https://mtixnat.uni-koblenz.de/owncloud/index.php/s/eMvm9LHNHEHoZg3/download"
         imgLbWebLink = "https://mtixnat.uni-koblenz.de/owncloud/index.php/s/gkh39x9GAJQtvHN/download"
