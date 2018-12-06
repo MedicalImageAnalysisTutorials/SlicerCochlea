@@ -382,8 +382,8 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
         croppingBounds = [[0,0,0],[0,0,0]];   size = [0,0,0];    lower = [0,0,0] ;     upper = [0,0,0]
         for i in range(0,3):
             size[i] = int((self.croppingLength/spacing[i])/2)
-            lower[i] = point[i] - size[i]
-            upper[i] = dimensions[i] - (point[i]+size[i])
+            lower[i] = int(point[i]) - int(size[i])
+            upper[i] = dimensions[i] - int(point[i]+size[i])
             # Check if calculated boundaries exceed image dimensions
             if lower[i] < 0:
                     lower[i] = 0
@@ -391,14 +391,12 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
             if upper[i] > dimensions[i]:
                    upper[i] = dimensions[i]
             #endif
-        #endfor         
+        #endfor   
         croppingBounds = [lower,upper]
-
-        # Call SimpleITK CropImageFilter
+		# Call SimpleITK CropImageFilter
         print("Cropping with " + str(croppingBounds[0]) + " and " + str(croppingBounds[1]) + ".")
         inputImage = sitkUtils.PullVolumeFromSlicer(inputVolume.GetID())
         cropper = sitkUtils.sitk.CropImageFilter()
-        #this generates itk image
         croppedImage = cropper.Execute(inputImage, croppingBounds[0], croppingBounds[1])          
         nodeName = str(inputVolume.GetName()) + "_crop"
         self.inputCropPath = os.path.splitext(inputVolume.GetStorageNode().GetFileName())[0] + "_crop.nrrd"
@@ -969,4 +967,3 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
     self.logic.run(inputVolumeNode, inputFiducialNode, side)
     self.delayDisplay('Test passed!')
   #enddef
-
