@@ -243,7 +243,11 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
     self.noOutput= " >> /dev/null"
     self.outputPath = self.vissimPath+"/outputs"
     self.parsPath = self.vissimPath +"/pars/parCochSeg.txt"
-    self.modelPath = self.vissimPath +"/models/modelCochlea"        
+    self.modelPath = self.vissimPath +"/models/modelCochlea" 
+    
+    # Add runtime librarires        
+    os.environ['LD_LIBRARY_PATH'] = self.vissimPath + "/sw/elastix-4.9.0/lib"
+
     self.downSz= 160    
     self.winOS=0       
     self.sideActivated       = "L"    # use left side by default   
