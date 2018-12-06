@@ -10,14 +10,14 @@
 #      - Anna Gessler,         agessler@uni-koblenz.de    : Programming & testing.    #
 #      - Jasper Grimmig        jgrimmig@uni-koblenz.de    : Programming & testing.    #
 #      - Pepe Eulzer           eulzer@uni-koblenz.de      : Programming & testing.    #  
-#  [1] http://elastix.isi.uu.nl                                                       #
+#  [1] https://www.slicer.org                                                         #
 #  [2] http://elastix.isi.uu.nl                                                       #
 #  [3] Al-Dhamari et al., (2017): ACIR: automatic cochlea image registration.         #
 #      In: Proceedings SPIE Medical Imaging 2017: Image Processing;. SPIE. Bd.        #
 #          10133. S. 10133p1-10133p5                                                  #
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
-#  Updated: 25.10.2018                                                                  #    
+#  Updated: 6.12.2018                                                                  #    
 #                                                                                     #  
 #======================================================================================
 
@@ -34,17 +34,18 @@ from os.path import isfile
 from os.path import basename
 from PythonQt import BoolResult
 from shutil import copyfile
+
+import CochleaSeg
  
 #TODO:
-# - install requirements automatically     
+# Later:
 # - Checking if all above are needed 
 # - Cleaning, optimizing, commenting.  
-# - Using smaller size binaries or the SlierElastix binaries.   
-# - Visualizing the interimediate steps. 
 # - Testing in both Windows and Linux. 
 # - Supporting DICOM. 
 # - Supporting illegal filename.  
-# - Use updated paths
+# - Using  SlierElastix binaries.   
+# - Visualizing the interimediate steps. 
 # 
 #  
 # Terminology
@@ -80,226 +81,224 @@ class CochleaReg(ScriptedLoadableModule):
 #===================================================================
 class CochleaRegWidget(ScriptedLoadableModuleWidget):
 
-    #----------------------------------------   Initialization 
-    def setup(self):
-        print(" ")
-        print("=======================================================")   
-        print("   Automatic Cochlea Image Registration                ")
-        print("=======================================================")    
+  seglogic = CochleaSeg.CochleaSegLogic()
 
-        # to avoid conflict between elastix itk and slicer itk 
-        os.environ['ITK_AUTOLOAD_PATH'] = ' '
+  #----------------------------------------   Initialization 
+  def setup(self):
+    print(" ")
+    print("=======================================================")   
+    print("   Automatic Cochlea Image Registration                ")
+    print("=======================================================")    
+
+    # to avoid conflict between slicer and elastix ITKs
+    os.environ['ITK_AUTOLOAD_PATH'] = ' '
        
-        ScriptedLoadableModuleWidget.setup(self)
+    ScriptedLoadableModuleWidget.setup(self)
       
-        # Declare global labels   
-        self.timeLbl = qt.QLabel("                 Time: 00:00")
-        self.timeLbl.setFixedWidth(500)
+    # to access logic class functions and setup global variables
+  
+    # Set default VisSIm location in the user home 
+    #TODO: add option user-defined path when installed first time 
+    self.logic = CochleaRegLogic()
+    self.logic.setGlobalVariables()
+    #=================================================================
+    #                     Create the GUI interface
+    #=================================================================   
+    # Create collapsible Button for registration, transformix and invert transform
+    self.mainCollapsibleBtn = ctk.ctkCollapsibleButton()
+    self.mainCollapsibleBtn.setStyleSheet("ctkCollapsibleButton { background-color: DarkSeaGreen  }")
+    self.mainCollapsibleBtn.text = "ACIR: Automatic Cochlea Image Registration"
+    self.layout.addWidget(self.mainCollapsibleBtn)
+    self.mainFormLayout = qt.QFormLayout(self.mainCollapsibleBtn)
 
-        # Initialize GUI
-        self.initRegistrationPanel()
+    # Create fixed Volume Selector
+    self.fixedSelectorCoBx                        = slicer.qMRMLNodeComboBox()
+    self.fixedSelectorCoBx.nodeTypes              = ["vtkMRMLScalarVolumeNode"]
+    self.fixedSelectorCoBx.selectNodeUponCreation = True
+    self.fixedSelectorCoBx.addEnabled             = False
+    self.fixedSelectorCoBx.removeEnabled          = False
+    self.fixedSelectorCoBx.noneEnabled            = False
+    self.fixedSelectorCoBx.showHidden             = False
+    self.fixedSelectorCoBx.showChildNodeTypes     = False
+    self.fixedSelectorCoBx.setMRMLScene( slicer.mrmlScene )
+    self.fixedSelectorCoBx.setToolTip("Pick the fixed volume")
+    self.mainFormLayout.addRow("Fixed Volume: ", self.fixedSelectorCoBx)
 
-        #--------------------------------------------------------------------------------------------
-        #                       Default Settings  
-        #--------------------------------------------------------------------------------------------
-        print("   Default Settings: ")        
-        # Set default VisSIm location in the user home 
-        # It can be a user-defined path when installed first time 
-        self.vissimPath    = expanduser("~/VisSimTools")
-        print("      VisSimTools folder: " + self.vissimPath)
-        # TODO: provide an option to use SlicerElastix binaries        
-        self.elastixBinPath    =  self.vissimPath + "/sw/elastix-4.9.0/bin/elastix"
-        self.transformixBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/transformix"
-        self.elxInvTransBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/elxInvertTransform"
-        self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/VoxfbJ1kHw0EAQ6/download")      
-        self.othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/x6kts1R4f5RkDcN/download")   
-          
-        self.noOutput= " >> /dev/null"
+    # Create moving Volume Selector
+    self.movingSelectorCoBx                        = slicer.qMRMLNodeComboBox()
+    self.movingSelectorCoBx.nodeTypes              = ["vtkMRMLScalarVolumeNode"]
+    self.movingSelectorCoBx.selectNodeUponCreation = True
+    self.movingSelectorCoBx.addEnabled             = False
+    self.movingSelectorCoBx.removeEnabled          = False
+    self.movingSelectorCoBx.noneEnabled            = False
+    self.movingSelectorCoBx.showHidden             = False
+    self.movingSelectorCoBx.showChildNodeTypes     = False
+    self.movingSelectorCoBx.setMRMLScene( slicer.mrmlScene )
+    self.movingSelectorCoBx.setToolTip("Pick the moving volume")
+    self.mainFormLayout.addRow("Moving Volume: ", self.movingSelectorCoBx)       
 
-        # Set default output directory
-        self.outputPath = self.vissimPath+"/outputs"
-        #self.outputPathLbl.setText("Output dir: " + self.outputPath)
-        print("      Output folder : " + self.outputPath)
-        
-        # Set default parameter file
-        self.parsPath = self.vissimPath +"/pars/parCochReg.txt"
-        print("      Parameter file: " + self.parsPath)
+    # Create a time label
+    self.timeLbl = qt.QLabel("                 Time: 00:00")
+    self.timeLbl.setFixedWidth(500)   
+    self.tmLbl = self.timeLbl
     
-        #radius in mm around cochlea that will be cropped, e.g. 10 mm
-        self.croppingLength = 10   
-        print("      Cropping Length: " + str(self.croppingLength))
-        # download size of VisSimTools folder in MB
-        self.downSz= 160    
-        self.winOS=0        
-        # windows
-        if platform.system()=='Windows':
-           self.elastixBinPath    = self.elastixBinPath      + ".exe"
-           self.transformixBinPath =self.transformixBinPath  + ".exe"
-           self.elxInvTransBinPath = self.elxInvTransBinPath + ".exe"  
-           self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TAc8toxaajSdfy7/download")   
-           self.noOutput= " > nul"   
-           winOS=1    
-           self.downSz= 500    
-        #endif
+    # Create a textbox for cochlea location
+    # TODO activate input IJK values as well
+    self.fixedPointEdt = qt.QLineEdit()
+    self.fixedPointEdt.setFixedHeight(40)
+    Pt = self.logic.fixedPoint
+    self.fixedPointEdt.setText(str(Pt))
+
+    # Create a textbox for cochlea location
+    # TODO activate input IJK values as well
+    self.movingPointEdt = qt.QLineEdit()
+    self.movingPointEdt.setFixedHeight(40)
+    Pt = self.logic.movingPoint
+    self.movingPointEdt.setText(str(Pt))
+
+    # Create a cochlea locator button
+    self.fixedFiducialBtn = qt.QPushButton("Pick cochlea location in fixed image    ")
+    self.fixedFiducialBtn.setFixedHeight(40)
+    self.fixedFiducialBtn.setToolTip("Pick the fixed fiducial point that will be the center of the cropped image")
+    self.fixedFiducialBtn.connect('clicked(bool)', lambda: self.onInputFiducialBtnClick("fixed"))
+    self.mainFormLayout.addRow( self.fixedFiducialBtn, self.fixedPointEdt)    
+
+    # Create a cochlea locator button
+    self.movingFiducialBtn = qt.QPushButton("Pick cochlea location in moving image    ")
+    self.movingFiducialBtn.setFixedHeight(40)
+    self.movingFiducialBtn.setToolTip("Pick the moving fiducial point that will be the center of the cropped image")
+    self.movingFiducialBtn.connect('clicked(bool)', lambda: self.onInputFiducialBtnClick("moving"))
+    self.mainFormLayout.addRow( self.movingFiducialBtn, self.movingPointEdt)    
         
-        #check if VisSimTools folder is found 
-        self.checkVisSimTools()
-           
+    # Create a button to run registration
+    self.applyBtn = qt.QPushButton("Run")
+    self.applyBtn.setFixedHeight(50)
+    self.applyBtn.setFixedWidth (250)
+    self.applyBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
+    self.applyBtn.toolTip = ('How to use:' ' Load at least two images into Slicer. Pick cochlea locations using the buttons and the Slicer Fiducial tool ')
+    self.applyBtn.connect('clicked(bool)', self.onApplyBtnClick)
+    self.mainFormLayout.addRow(self.applyBtn, self.timeLbl)
+    self.runBtn = self.applyBtn
+    
+    self.layout.addStretch(1) # Collapsible button is held in place when collapsing/expanding.
 
-    #--------------------------------------------------------------------------------------------
-    #                        Main Panel
-    #--------------------------------------------------------------------------------------------
-    def initRegistrationPanel(self):
-        # Create collapsible Button for registration, transformix and invert transform
-        self.registrationCollapsibleBtn = ctk.ctkCollapsibleButton()
-        self.registrationCollapsibleBtn.setStyleSheet("ctkCollapsibleButton { background-color: DarkSeaGreen  }")
-        self.registrationCollapsibleBtn.text = "ACIR: Automatic Cochlea Image Registration"
-        self.layout.addWidget(self.registrationCollapsibleBtn)
-        self.registrationFormLayout = qt.QFormLayout(self.registrationCollapsibleBtn)
-
-        # Create fixed Volume Selector
-        self.fixedSelectorCoBx                        = slicer.qMRMLNodeComboBox()
-        self.fixedSelectorCoBx.nodeTypes              = ["vtkMRMLScalarVolumeNode"]
-        self.fixedSelectorCoBx.selectNodeUponCreation = True
-        self.fixedSelectorCoBx.addEnabled             = False
-        self.fixedSelectorCoBx.removeEnabled          = False
-        self.fixedSelectorCoBx.noneEnabled            = False
-        self.fixedSelectorCoBx.showHidden             = False
-        self.fixedSelectorCoBx.showChildNodeTypes     = False
-        self.fixedSelectorCoBx.setMRMLScene( slicer.mrmlScene )
-        self.fixedSelectorCoBx.setToolTip("Pick the fixed volume")
-        self.registrationFormLayout.addRow("Fixed Volume: ", self.fixedSelectorCoBx)
-
-        # Create moving Volume Selector
-        self.movingSelectorCoBx                        = slicer.qMRMLNodeComboBox()
-        self.movingSelectorCoBx.nodeTypes              = ["vtkMRMLScalarVolumeNode"]
-        self.movingSelectorCoBx.selectNodeUponCreation = True
-        self.movingSelectorCoBx.addEnabled             = False
-        self.movingSelectorCoBx.removeEnabled          = False
-        self.movingSelectorCoBx.noneEnabled            = False
-        self.movingSelectorCoBx.showHidden             = False
-        self.movingSelectorCoBx.showChildNodeTypes     = False
-        self.movingSelectorCoBx.setMRMLScene( slicer.mrmlScene )
-        self.movingSelectorCoBx.setToolTip("Pick the moving volume")
-        self.registrationFormLayout.addRow("Moving Volume: ", self.movingSelectorCoBx)       
-
-        # Create fixed Fiducial selector. The fixed input volume will be cropped around the chosen Fiducial.
-        # The lambda function is useful to send which button pressed the function FiducialButtonClick
-        # instead of having two functions 
-        self.fixedPoint       = [0,0,0]
-        self.fixedPointLbl    = qt.QLineEdit()
-        self.fixedPointLbl.setReadOnly(True) # The point can only be edited by placing a new Fiducial
-        self.fixedPointLbl.setText(str(self.fixedPoint))
-        self.fixedFiducialBtn = qt.QPushButton("Pick cochlea location in fixed image    ")
-        #self.fixedFiducialBtn.setFixedWidth(400)
-        self.fixedFiducialBtn.setToolTip("Pick the input fiducial point that will be the center of the cropped image")
-        self.fixedFiducialBtn.connect('clicked(bool)', lambda: self.FiducialButtonClick("fixed"))
-        self.registrationFormLayout.addRow( self.fixedFiducialBtn, self.fixedPointLbl)
-
-        # Create moving Fiducial selector. The moving input volume will be cropped around the chosen Fiducial.
-        self.movingPoint       = [0,0,0]
-        self.movingPointLbl    = qt.QLineEdit()
-        self.movingPointLbl.setReadOnly(True) # The point can only be edited by placing a new Fiducial
-        self.movingPointLbl.setText(str(self.movingPoint))
-        self.movingFiducialBtn = qt.QPushButton("Pick cochlea location in moving image")
-        #self.movingFiducialBtn.setFixedWidth(400)
-        self.movingFiducialBtn.setToolTip("Pick the input fiducial point that will be the center of the cropped image")
-        self.movingFiducialBtn.connect('clicked(bool)', lambda: self.FiducialButtonClick("moving"))
-        self.registrationFormLayout.addRow(self.movingFiducialBtn, self.movingPointLbl)
-
-        # Create and link Button to run the registration
-        self.runBtn = qt.QPushButton("Run")
-        self.runBtn.setFixedHeight(50)
-        self.runBtn.setFixedWidth (250)
-        self.runBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
-        self.runBtn.toolTip = ('How to use:' ' Load at least two images into Slicer. Pick cochlea locations using the buttons and the Slicer Fiducial tool ')
-        self.runBtn.connect('clicked(bool)', self.runBtnClick)
-        self.registrationFormLayout.addRow(self.runBtn, self.timeLbl)
-
-        # Add time label
-        self.timeLbl.setText("                 Time: 00:00")
-
-        self.registrationFormLayout.addWidget(qt.QLabel("")) # Spacer
-        self.layout.addStretch(1) # Collapsible button is held in place when collapsing/expanding.
-
-    #--------------------------------------------------------------------------------------------
-    #                        Locating the cochlea: Fiducial placement
-    #--------------------------------------------------------------------------------------------               
-    def FiducialButtonClick(self, volumeType):
+  #--------------------------------------------------------------------------------------------
+  #                        Locating the cochlea: Fiducial placement
+  #--------------------------------------------------------------------------------------------               
+  def onInputFiducialBtnClick(self, volumeType):
+      
+    # Remove old Fiducial nodes
+    nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
+    for f in nodes:
+        if ((f.GetName() == "FixedImageFiducial") or (f.GetName() == "MovingImageFiducial")):
+            slicer.mrmlScene.RemoveNode(f)
+        #endif
+    #endfor
        
-        # Remove old Fiducial nodes
-        nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
-        for f in nodes:
-            if ((f.GetName() == "FixedImageFiducial") or (f.GetName() == "MovingImageFiducial")):
-                    slicer.mrmlScene.RemoveNode(f)
+    # Create Fiducial Node for the cochlea location in both images
+    if (volumeType=="fixed"):
+        print(" ..... getting cochlea location in the fixed image")  
+        self.fixedFiducialBtn.setStyleSheet("QPushButton{ background-color: White  }")   
+        self.logic.locateCochlea(self.fixedSelectorCoBx.currentNode(), self.fixedPointEdt, volumeType)    
+        self.fixedFiducialBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
+    elif (volumeType=="moving"):              
+        print(" ..... getting cochlea location in the fixed image")  
+        self.movingFiducialBtn.setStyleSheet("QPushButton{ background-color: White  }")   
+        self.logic.locateCochlea(self.movingSelectorCoBx.currentNode(), self.movingPointEdt, volumeType)    
+        self.movingFiducialBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
+    #endif    
+    
+  def onApplyBtnClick(self):
+    self.runBtn.setText("...please wait")
+    self.runBtn.setStyleSheet("QPushButton{ background-color: red  }")
+    slicer.app.processEvents()
+    self.stm=time.time()
+    print("time:" + str(self.stm))
+    self.timeLbl.setText("                 Time: 00:00")
+    
+    # create an option to use IJK point or fidicual node
+    self.logic.run( self.fixedSelectorCoBx.currentNode(),self.logic.fixedMarkupNode, self.movingSelectorCoBx.currentNode(),self.logic.movingMarkupNode )
+    #self.logic.register( self.fixedSelectorCoBx.currentNode(),self.movingSelectorCoBx.currentNode() )
+     
+    self.etm=time.time()
+    tm=self.etm - self.stm
+    self.timeLbl.setText("Time: "+str(tm)+"  seconds")
+    self.runBtn.setText("Run")
+    self.runBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
+    slicer.app.processEvents()
+  #enddef
+  
+  def cleanup(self):  
+      pass
+  #enddef
+  
+#===================================================================
+#                           Logic
+#===================================================================
+class CochleaRegLogic(ScriptedLoadableModuleLogic):
+
+  segLogic = CochleaSeg.CochleaSegLogic()
+  
+  #set global paths and parameters
+  def setGlobalVariables(self):
+    # most of the variables are defined in the segmentation module
+    # TODO: create a common class to define common variables and functions 
+    self.segLogic.setGlobalVariables()
+    self.vissimPath         =  self.segLogic.vissimPath
+    self.elastixBinPath     =  self.segLogic.elastixBinPath
+    self.transformixBinPath =  self.segLogic.transformixBinPath
+    self.elxInvTransBinPath =  self.segLogic.elxInvTransBinPath
+    self.elastixWebLink     =  self.segLogic.elastixWebLink      
+    self.noOutput           =  self.segLogic.noOutput
+    self.outputPath         =  self.segLogic.outputPath
+    
+    self.othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/x6kts1R4f5RkDcN/download")   
+    self.parsPath           = self.vissimPath +"/pars/parCochSeg.txt"
+    self.downSz             = 160    
+    self.winOS              =0       
+    
+    # initial poisition = no position
+    self.fixedPoint = [0,0,0]
+    self.movingPoint = [0,0,0]
+
+    #Cropping Parameters default = 10 
+    self.croppingLength = self.segLogic.croppingLength 
+
+    #Resampling parameters, default [0.125, 0.125,0.125]
+    self.RSxyz =  self.segLogic.RSxyz
        
-        # Create Fiducial Node for the cochlea location in both images
-        if (volumeType=="fixed"):
-            print(" ..... getting cochlea location in the fixed image")  
-            # Reset global point label
-            self.fixedPoint = [0,0,0]
-            self.fixedPointLbl.setText("[0, 0, 0]")
-            # Check if a volume is selected
-            if not self.fixedSelectorCoBx.currentNode():
-                print >> sys.stderr, "ERROR: No fixed volume"
-                return -1
- 
-            # TODO bug: if the fiducial placement mode is cancelled using the Slicer Fiducial button, the button remains colored
-            self.fixedFiducialBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
-            self.movingFiducialBtn.setStyleSheet("QPushButton{ background-color: White  }")
+    # windows
+    if platform.system()=='Windows':
+           self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TAc8toxaajSdfy7/download")   
+           self.downSz= 500    
+    #endif
+    #check if VisSimTools folder is found 
+    self.checkVisSimTools( )
+  #enddef
+  
+  # Check if image is valid
+  def hasImageData(self,inputVolumeNode):
+    #check fixed image 
+    if not inputVolumeNode:
+      logging.debug('hasImageData failed: no input volume node')
+      return False
+    if inputVolumeNode.GetImageData() is None:
+      logging.debug('hasImageData failed: no image data in input volume node')
+      return False
+    return True
+  #enddef
+  
+  def locateCochlea(self, inputVolumeNode,  inputPointEdt, volumeType):
 
-            self.fixedFiducialNode = slicer.vtkMRMLMarkupsFiducialNode()
-            self.fixedFiducialNode.SetName("FixedImageFiducial")
-            slicer.mrmlScene.AddNode(self.fixedFiducialNode)
+        # Create Fiducial Node for the cochlea location  
+        print(" ..... getting cochlea location in "+volumeType+ " image")
 
-            self.displayCoronalView(self.fixedSelectorCoBx.currentNode())
-
-            # Start Fiducial Placement Mode in Slicer
-            placeModePersistance = 0
-            slicer.modules.markups.logic().StartPlaceMode(placeModePersistance)
-
-            # Observe scene for updates
-            self.fixedFiducialNode.AddObserver(self.fixedFiducialNode.MarkupAddedEvent, self.convRAS2IJK)
-            self.fixedFiducialNode.AddObserver(self.fixedFiducialNode.MarkupRemovedEvent, self.convRAS2IJK)
-        elif (volumeType=="moving"):
-            print(" ..... getting cochlea location in the moving image")  
-            # Reset global point label
-            self.movingPoint = [0,0,0]
-            self.movingPointLbl.setText("[0, 0, 0]")
-            # Check if a volume is selected
-            if not self.movingSelectorCoBx.currentNode():
-                print >> sys.stderr, "ERROR: No moving volume, Bad Path or DICOM."
-                return -1
-            
-
-            # TODO bug: if the fiducial placement mode is cancelled using the Slicer Fiducial button, the button remains colored
-            self.movingFiducialBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
-            self.fixedFiducialBtn.setStyleSheet("QPushButton{ background-color: White  }")
-
-            self.movingFiducialNode = slicer.vtkMRMLMarkupsFiducialNode()
-            self.movingFiducialNode.SetName("MovingImageFiducial")
-            slicer.mrmlScene.AddNode(self.movingFiducialNode)
-
-            self.displayCoronalView(self.movingSelectorCoBx.currentNode())
-
-            # Start Fiducial Placement Mode in Slicer
-            placeModePersistance = 0
-            slicer.modules.markups.logic().StartPlaceMode(placeModePersistance)
-
-            # Observe scene for updates
-            self.movingFiducialNode.AddObserver(self.movingFiducialNode.MarkupAddedEvent, self.convRAS2IJK)
-            self.movingFiducialNode.AddObserver(self.movingFiducialNode.MarkupRemovedEvent, self.convRAS2IJK)
-
-    #--------------------------------------------------------------------------------------------
-    #                        Display Coronal during locating the cochlea
-    #--------------------------------------------------------------------------------------------
-    def displayCoronalView(self, inputVolume):
+        #  Display Coronal during locating the cochlea
         green_logic = slicer.app.layoutManager().sliceWidget("Green").sliceLogic()
         green_cn = green_logic.GetSliceCompositeNode()
-        green_cn.SetBackgroundVolumeID(inputVolume.GetID())
+        green_cn.SetBackgroundVolumeID(inputVolumeNode.GetID())
         lm = slicer.app.layoutManager()
         lm.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpGreenSliceView)
-
         # Fit slice to window
         sliceNodes = slicer.util.getNodes('vtkMRMLSliceNode*')
         layoutManager = slicer.app.layoutManager()
@@ -307,241 +306,244 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
             sliceWidget = layoutManager.sliceWidget(sliceNode.GetLayoutName())
             if sliceWidget:
                 sliceWidget.sliceLogic().FitSliceToAll()
-
-    #--------------------------------------------------------------------------------------------
-    #                       IJK coordinates from Fiducial 
-    #--------------------------------------------------------------------------------------------
-    def convRAS2IJK(self, caller, event):
+            #endif
+        #endfor
+               
+        # Remove old Fiducial nodes
         nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
-        isFixedImage = True
         for f in nodes:
-            if (f.GetName() == "FixedImageFiducial"):
-                    inputFiducial = self.fixedFiducialNode
-                    inputVolume = self.fixedSelectorCoBx.currentNode()
-            elif (f.GetName() == "MovingImageFiducial"):
-                    inputFiducial = self.movingFiducialNode
-                    inputVolume = self.movingSelectorCoBx.currentNode()
-                    isFixedImage = False
-
-        # Get RAS-to-IJK-conversion matrix of the volume node associated with the Fiducial
-        RasToIjkMatrix = vtk.vtkMatrix4x4()
-        inputVolume.GetRASToIJKMatrix(RasToIjkMatrix)
-
-        # Call function to calculate IJK coordinates
-        world = [0,0,0,0]
-        inputFiducial.GetNthFiducialWorldCoordinates(0,world)
-        ijkDoubleCoordinates = RasToIjkMatrix.MultiplyDoublePoint(world)
-        ijkIntCoordinates = [0,0,0]
-        for i in range(0,3):
-            ijkIntCoordinates[i] = int(ijkDoubleCoordinates[i])
-
-        # Save IJK coordinates in corresponding point variable and display them
-        if isFixedImage:
-            self.fixedPoint = ijkIntCoordinates
-            self.fixedPointLbl.setText(str(ijkIntCoordinates))
-            self.fixedFiducialBtn.setStyleSheet("QPushButton{ background-color: White  }")
-            print(" ..... cochlea location in the fixed image set to: " + str(ijkIntCoordinates))  
-        else:
-            self.movingPoint = ijkIntCoordinates
-            self.movingPointLbl.setText(str(ijkIntCoordinates))
-            self.movingFiducialBtn.setStyleSheet("QPushButton{ background-color: White  }")
-            print(" ..... cochlea location in the moving image set to: " + str(ijkIntCoordinates))  
-            
+            if ((f.GetName() == volumeType+"Point") ):
+                    slicer.mrmlScene.RemoveNode(f)
+            #endif
+        #endfor
   
-    #--------------------------------------------------------------------------------------------
-    #                       Cropping Process  
-    #--------------------------------------------------------------------------------------------
-    def calculateCroppingBounds(self, dimensions, spacing, point):
-        self.croppingLength
-        size = [0,0,0]
-        for i in range(0,3):
-            size[i] = int((self.croppingLength/spacing[i])/2)
+        # Reset global point label
+        inputPoint = [0,0,0]
+        inputPointEdt.setText("[0, 0, 0]")
+        # Check if a volume is selected
+        #
+        if not inputVolumeNode:
+            print >> sys.stderr, "You need to select a "+ volumeType +" image first."
+            return -1
+        #endif
+        #TODO: reduce this code
+        if volumeType=="fixed":
+             self.fixedVolumeNode = inputVolumeNode  
+             self.fixedPointEdt = inputPointEdt
+             self.fixedMarkupNode = slicer.vtkMRMLMarkupsFiducialNode()
+             self.fixedMarkupNode.SetName(volumeType+"Point")
+             slicer.mrmlScene.AddNode(self.fixedMarkupNode)
+             # Start Fiducial Placement Mode in Slicer
+             placeModePersistance = 0
+             slicer.modules.markups.logic().StartPlaceMode(placeModePersistance)
+             # Observe scene for updates
+             self.fixedMarkupNode.AddObserver(self.fixedMarkupNode.MarkupAddedEvent,   self.convRAS2IJK)
+             self.fixedMarkupNode.AddObserver(self.fixedMarkupNode.MarkupRemovedEvent, self.convRAS2IJK)
+             self.fixedMarkupNode.AddObserver(self.fixedMarkupNode.PointModifiedEvent, self.convRAS2IJK)             
+        elif volumeType=="moving":
+             self.movingVolumeNode = inputVolumeNode  
+             self.movingPointEdt = inputPointEdt
+             self.movingMarkupNode = slicer.vtkMRMLMarkupsFiducialNode()
+             self.movingMarkupNode.SetName(volumeType+"Point")
+             slicer.mrmlScene.AddNode(self.movingMarkupNode)
+             # Start Fiducial Placement Mode in Slicer
+             placeModePersistance = 0
+             slicer.modules.markups.logic().StartPlaceMode(placeModePersistance)
 
-        # Calculate lower and upper cropping bounds
-        lower = [0,0,0]
-        for i in range(0,3):
-            lower[i] = point[i] - size[i]
+             # Observe scene for updates
+             self.movingMarkupNode.AddObserver(self.movingMarkupNode.MarkupAddedEvent,   self.convRAS2IJK)
+             self.movingMarkupNode.AddObserver(self.movingMarkupNode.MarkupRemovedEvent, self.convRAS2IJK)
+             self.movingMarkupNode.AddObserver(self.movingMarkupNode.PointModifiedEvent, self.convRAS2IJK)
 
-        upper = [0,0,0]
-        for i in range(0,3):
-            upper[i] = dimensions[i] - (point[i]+size[i])
+        #endif
+    #enddef
 
-        # Check if calculated boundaries exceed image dimensions
-        for i in [lower,upper]:
-            for j in range(0,3):
-                if i[j] < 0:
-                    i[j] = 0
-                if i[j] > dimensions[j]:
-                    i[j] = dimensions[j]
-
-        return [lower,upper]
-
-    # Returns cropped volume
-    def doCropping(self, inputVolume, point):
-        print("================= Begin cropping ... =====================")
-        print("Cochlea location: " + str(point))
-
-        spacing = inputVolume.GetSpacing()
-        imgData = inputVolume.GetImageData()
-        dimensions = imgData.GetDimensions()
-        croppingBounds = [[0,0,0],[0,0,0]]
-        croppingBounds = self.calculateCroppingBounds(dimensions, spacing, point)
-
-        # Call SimpleITK CropImageFilter
-        print("Cropping with " + str(croppingBounds[0]) + " and " + str(croppingBounds[1]) + ".")
-        inputImage = sitkUtils.PullVolumeFromSlicer(inputVolume.GetID())
-        cropper = sitkUtils.sitk.CropImageFilter()
-        croppedImage = cropper.Execute(inputImage, croppingBounds[0], croppingBounds[1])
-
-        # Calculate file name and path of cropped image
-        storageNode = inputVolume.GetStorageNode()
-        pathWithoutExtension = os.path.splitext(storageNode.GetFileName())[0]
-        savepath = pathWithoutExtension + "_crop.nrrd"
-
-        # Save cropped image in directory of the original volume
-        sitkUtils.PushVolumeToSlicer(croppedImage, None,  inputVolume.GetName() + "_crop",'vtkMRMLScalarVolumeNode')
-
-        nodeName = str(inputVolume.GetName()) + "_crop"
-        print("savepath" + str(savepath))
-        slicer.util.saveNode(slicer.util.getNode(nodeName), savepath)
-
-        print("================= Cropping finished =====================")
-        return savepath
-
+  #--------------------------------------------------------------------------------------------
+  #    RAS to  IJK Event
+  #--------------------------------------------------------------------------------------------
+  # The fiducial point saved in RAS, we need to convert to IJK
+  #  more info in our wiki 
+  def convRAS2IJK(self, caller, event):
+        rasPt = [0,0,0] 
+        if (caller.GetName() == "fixedPoint" ):
+              vtxt= "fixed"
+              ijkIntCoordinates = self.segLogic.ptRAS2IJK(self.fixedMarkupNode, self.fixedVolumeNode)
+              self.fixedMarkupNode.GetNthFiducialPosition(0,rasPt)
+              self.fixedPoint = ijkIntCoordinates
+              self.fixedPointEdt.setText(str(ijkIntCoordinates))
+        elif (caller.GetName() == "movingPoint"):
+              vtxt= "moving"
+              ijkIntCoordinates = self.segLogic.ptRAS2IJK(self.movingMarkupNode, self.movingVolumeNode)
+              self.movingMarkupNode.GetNthFiducialPosition(0,rasPt)
+              self.movingPoint = ijkIntCoordinates
+              self.movingPointEdt.setText(str(ijkIntCoordinates))
+        #endif        
+        print(" ..... cochlea location RAS: " + str())  
+        print(" ..... cochlea location in the "+vtxt+" image set to: " + str(ijkIntCoordinates))  
+  #enddef
    
-    #===========================================================================================
-    #                       Registration Process 
-    #--------------------------------------------------------------------------------------------
-    # This method tests the provided inputs before beginning the overlay procedure
-    def runBtnClick(self):
-        self.runBtn.setText("...please wait")
-        self.runBtn.setStyleSheet("QPushButton{ background-color: red  }")
-        slicer.app.processEvents()     
-        self.runBtn.setText("...please wait")
-        self.runBtn.setStyleSheet("QPushButton{ background-color: red  }")
-        slicer.app.processEvents() 
-        self.runBtn.setText("...please wait")
-        self.runBtn.setStyleSheet("QPushButton{ background-color: red  }")
-        slicer.app.processEvents() 
+  #===========================================================================================
+  #                       Registration Process 
+  #--------------------------------------------------------------------------------------------
+  # This method perform the registration steps
+  def run(self, fixedVolumeNode, fixedFiducialNode, movingVolumeNode, movingFiducialNode):
+      # to be used fromoutside we need to do:
+      # import CochleaReg
+      # logic= CochleaReg.CochleaRegLogic()
+      # logic.run(with the parameters above)
+      
+        """
+        Run the actual algorithm
+        """
+        # we need to run this again in case of external call
+        self.setGlobalVariables()
         
-        #self.removeOldResults()
-        # remove old files in the output folder
-        shutil.rmtree(self.outputPath) 
-        os.mkdir(self.outputPath)   
+        #check if the images are valid
+        self.hasImageData(fixedVolumeNode)
+        self.hasImageData(movingVolumeNode)
         
-        try:  # is there a node loaded
-            self.fixedNode = self.fixedSelectorCoBx.currentNode() 
-        except AttributeError:
-                print >> sys.stderr, "ERROR: You need to pick a fixed input volume."
-                return False
-        try:
-            self.fixedPath = self.fixedNode.GetStorageNode().GetFileName()
-        except:                    
-            self.fixedPath = self.fixedNode.GetStorageNode().GetFileName()
-            print(self.fixedPath)
-            
-        try:
-            self.movingNode = self.movingSelectorCoBx.currentNode()                       
-        except AttributeError:
-            print >> sys.stderr, "ERROR: You need to pick a moving input volume."
-            return False
+        self.fixedVolumeNode = fixedVolumeNode
+        self.fixedFiducialNode = fixedFiducialNode
         
-        try:
-            self.movingPath = self.movingNode.GetStorageNode().GetFileName()
-        except:                    
-            self.suppDICOM("moving")
-            self.movingPath = self.movingNode.GetStorageNode().GetFileName()
-            print(self.movingPath)       
+        self.movingVolumeNode = movingVolumeNode
+        self.movingFiducialNode = movingFiducialNode
 
+        # Create a temporary nodes as workaround for bad path or filename 
+        #TODO: create a temp folder and remove temp node before display
+        fixedTmpName= self.vissimPath+"/fixedImage.nrrd"
+        slicer.util.saveNode( fixedVolumeNode, fixedTmpName)
+        [success, self.fixedVolumeNode] = slicer.util.loadVolume(fixedTmpName, returnNode=True)    
+        self.fixedVolumeNode.SetName("fixedImage")
+
+        movingTmpName= self.vissimPath+"/movingImage.nrrd"
+        slicer.util.saveNode( movingVolumeNode, movingTmpName)
+        [success, self.movingVolumeNode] = slicer.util.loadVolume(movingTmpName, returnNode=True)    
+        self.movingVolumeNode.SetName("movingImage")
+
+        logging.info('Processing started')
+
+        # Get IJK point from the fiducial to use in cropping  
+        self.fixedPoint = self.segLogic.ptRAS2IJK(self.fixedFiducialNode,fixedVolumeNode)
+        self.movingPoint = self.segLogic.ptRAS2IJK(self.movingFiducialNode,movingVolumeNode)
+
+        #remove old files if exist
+        if os.path.isdir(self.outputPath.strip()): 
+           print("removing old output folder!")
+           shutil.rmtree(self.outputPath) 
+        #endif   
+        os.mkdir(self.outputPath)      
+
+        # results paths        
+        resTransPath = self.outputPath  + "/TransformParameters.0.txt"
+        resInvTransPath  = self.outputPath  + "/TF_Invert.txt"
+        resCropPath = self.outputPath + "/result.0.nrrd"          
+        resPath = self.outputPath + "/result.nrrd"          
+ 
+        self.fixedPath = self.fixedVolumeNode.GetStorageNode().GetFileName()
+        self.fixedFnm  = basename(os.path.splitext(self.fixedPath)[0])   
         
-        # Remove old Nodes 
+        self.movingPath = self.movingVolumeNode.GetStorageNode().GetFileName()
+        self.movingFnm  = basename(os.path.splitext(self.movingPath)[0])   
+        
+        # Remove old nodes
         rNodes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
         for f in rNodes:
             if f.GetName()[0:3]=='res':
-                slicer.mrmlScene.RemoveNode(f)
+                 slicer.mrmlScene.RemoveNode(f)
+            #endif
+        #endfor    
         
-        # Start time  
-        self.stm=time.time()
-        print("time:" + str(self.stm))
-        self.timeLbl.setText("                 Time: 00:00")
-                   
-        # TODO: optimize this part if possible           
-        # here we have 4 situations: 1-nothing  2-crop   3-swp   4-swp+crop 
-        print("================= Registration =====================")
-        
-        transResPath  = self.outputPath + "/TransformParameters.0.txt"
-        transInvPath  = self.outputPath + "/TF_Invert.txt"  
-        transCropPath = transResPath
-        self.resPath = self.outputPath + "/result.nrrd"          
-        
-        if not ( (self.movingPointLbl.text =="[0, 0, 0]") | (self.movingPointLbl.text =="[0, 0, 0]")) :
-                   # return Path of the cropped images  
-                   self.fixedCropPath   = self.doCropping(self.fixedNode, self.fixedPoint)
-                   self.movingCropPath  = self.doCropping(self.movingNode, self.movingPoint)    
+        # TODO: add better condition
+        if ((np.sum(self.fixedPoint)== 0) and (np.sum(self.movingPoint)== 0)) :
+            #qt.QMessageBox.critical(slicer.util.mainWindow(),'SlicerCochleaRegistration', 'Cochlea locations are missing')
+            print("Error: select cochlea points in fixed and moving images")
+            return False
+        #endif  
 
-                   # register the cropped images  
-                   Cmd = self.elastixBinPath  + " -f " + self.fixedCropPath +" -m "+ self.movingCropPath + " -out " + self.outputPath + " -p " + self.parsPath + self.noOutput
-                   print("executing: " + Cmd)
-                   c=os.system(Cmd)
-                   errStr="elastix error ( crop ) at line 604, check the log file"
-                   self.chkElxER(c,errStr) # Check if errors happen during elastix execution   
+        print("=================== Cropping =====================")                           
+        self.fixedCropPath  = self.segLogic.doCropping( self.fixedVolumeNode , self.fixedPoint )                     
+        self.movingCropPath = self.segLogic.doCropping( self.movingVolumeNode, self.movingPoint)                     
+        
+        print("================= Registration =====================")
+        #--------------------------------------- define results paths    -------------------------------
+        # transform resulted from regitration of cropped image
+        transCropPath     = self.outputPath + "/TransformParameters.0.txt"
+        # invert of the above transform 
+        transCropInvPath  = self.outputPath + "/TF_Invert.txt"  
+        # final transform that transform the input moving image to the input fixed image
+        transFinalPath      = self.outputPath + "/TransformParameters.txt"
+        # final registered image    
+        self.resPath = self.outputPath + "/result.nrrd"          
+        #---------------------------------------   registration cropped images      -------------------------------
+        # register the cropped images  
+        Cmd = self.elastixBinPath  + " -f " + self.fixedCropPath +" -m "+ self.movingCropPath + " -out " + self.outputPath + " -p " + self.parsPath + self.noOutput
+        print("executing: " + Cmd)
+        c=os.system(Cmd)
+        errStr="elastix error ( crop ) at line 482, check the log file"
+        self.chkElxER(c,errStr) # Check if errors happen during elastix execution   
                                
-                   # register the original large moving image using transformix  
-                    # change the size in the transform file to be like the large one                  
-                   transLargePath = self.modifyTransformFile(transCropPath)
-                   
-                   Cmd = self.transformixBinPath + " -in " + self.movingPath + " -out " + self.outputPath + " -tp " + transLargePath + self.noOutput
-                   print("Executing... " + str(Cmd))
-                   c=os.system(Cmd)
-                   errStr="Transformix error (cropping) at line 616, check the log file"
-                   self.chkElxER(c,errStr) # Check if errors happen during elastix execution 
-                   
-                   #remove the temprary cropped file and node  
-                   os.remove(self.fixedCropPath)     
-                   os.remove(self.movingCropPath)  
-        else:
-                    qt.QMessageBox.critical(slicer.util.mainWindow(),'Registration', 'Cochlea locations are missing')
-                    print("Error cochlea locations are missing")
-                    return False
-        #endif
+        #---------------------------------------  transform the moving image     -------------------------------
+        # change the size in the transform file to be like the large one                  
+        transFinalPath = self.modifyTransformFile(transCropPath,transFinalPath)                 
+        Cmd = self.transformixBinPath + " -in " + self.movingPath + " -out " + self.outputPath + " -tp " + transFinalPath + self.noOutput
+        print("Executing... " + str(Cmd))
+        c=os.system(Cmd)
+        errStr="Transformix error (cropping) at line 491, check the log file"
+        self.chkElxER(c,errStr) # Check if errors happen during elastix execution 
+        
+        [success , resultVolumeNode ]=slicer.util.loadVolume(self.resPath, returnNode=True)  
+        resultVolumeNode.SetName('result')           
+        #remove the temprary cropped files and nodes  
+        os.remove(self.fixedCropPath)     
+        os.remove(self.movingCropPath)  
+        os.remove(fixedTmpName)     
+        os.remove(movingTmpName)  
+        slicer.mrmlScene.RemoveNode(self.fixedVolumeNode)
+        slicer.mrmlScene.RemoveNode(self.movingVolumeNode)
+        slicer.mrmlScene.RemoveNode(slicer.util.getNode('fixedImage_crop'))
+        slicer.mrmlScene.RemoveNode(slicer.util.getNode('movingImage_crop'))
+        slicer.mrmlScene.RemoveNode(slicer.util.getNode('fixedPoint'))
+        slicer.mrmlScene.RemoveNode(slicer.util.getNode('movingPoint'))
                                 
         #Display the result if no error
         # Clear cochlea location labels
         print("Result saved as: " + self.resPath)
         if  c==0:
-            # The images are loaded in Slicer, and the scenes are adjusted.
-            self.displayResult(self.fixedPath,  self.movingPath, self.resPath)
+            # fixed and registered image are displayed in different colors.
+            self.fuseTwoImages(fixedVolumeNode,  resultVolumeNode)
+            
+            print("==============================================")
+            print(" All tasks are done!")
+            print("==============================================")        
+
         else:
             print("error happened during registration, no display ")   
-         
+        #endif 
        
-        self.runBtn.setText("Run")
-        self.runBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
-    slicer.app.processEvents()     
   
-    #--------------------------------------------------------------------------------------------
-    #                       Check Elastix error
-    #--------------------------------------------------------------------------------------------
-    # This method checks if errors happen during elastix execution
-    def chkElxER(self,c, s):
+  #--------------------------------------------------------------------------------------------
+  #                       Check Elastix error
+  #--------------------------------------------------------------------------------------------
+  # This method checks if errors happen during elastix execution
+  def chkElxER(self,c, s):
         if c>0:
            qt.QMessageBox.critical(slicer.util.mainWindow(),'Registration', s)
            print(s)  
            return False
         else: 
             print("done !!!")
+        #endif 
+  #enddef
 
-    #--------------------------------------------------------------------------------------------
-    #                      Modify Cropped Transform File
-    #--------------------------------------------------------------------------------------------
-    def modifyTransformFile(self, transCropPath):
-        transOutPath = self.outputPath + "/TransformParameters.txt"
-        
+  #--------------------------------------------------------------------------------------------
+  #                      Modify Cropped Transform File
+  #--------------------------------------------------------------------------------------------
+  def modifyTransformFile(self, transCropPath,transFinalPath):       
         # Get spacing, size and origin of the fixed volume
-        mFid     = self.fixedNode.GetImageData()
+        mFid     = self.fixedVolumeNode.GetImageData()
         mDimensions = mFid.GetDimensions()
-        mSpacing = self.fixedNode.GetSpacing()
-        mOrigin  = self.fixedNode.GetOrigin()
+        mSpacing = self.fixedVolumeNode.GetSpacing()
+        mOrigin  = self.fixedVolumeNode.GetOrigin()
 
         # TODO check this part 
         # try to solve AX2MR problem         
@@ -549,7 +551,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
 
        # Get IJKToRAS direction matrix of the fixed volume and save its values into a list
         matrix = vtk.vtkMatrix4x4()
-        self.fixedNode.GetIJKToRASDirectionMatrix(matrix)
+        self.fixedVolumeNode.GetIJKToRASDirectionMatrix(matrix)
         mE = []
         for i in range(0,3):
             for j in range(0,3):
@@ -561,7 +563,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
         # Replace the lines containing size, spacing, origin and direction matrix.       
         f = open(transCropPath,'r')
         # remove contents
-        modifiedTransFile = open(transOutPath, "w+")
+        modifiedTransFile = open(transFinalPath, "w+")
         for line in f:
             if line.startswith("(Size"):
                 modifiedTransFile.write("(Size " + str(mDimensions[0]) + " " + str(mDimensions[1]) + " " + str(mDimensions[2]) + ")\n")
@@ -575,92 +577,36 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
                 modifiedTransFile.write(line) # no need for new line as it is included in the original file
         f.close()
         modifiedTransFile.close()
-        return transOutPath
+        return transFinalPath
 
-    #--------------------------------------------------------------------------------------------
-    #                       Remove Old results and Reset
-    #--------------------------------------------------------------------------------------------
-    #TODO: add reset button
-    # This method removes temporary files and old result files from the output directory and the Slicer scene.
-    def removeOldResults(self):
-     
-        # Remove remaining Fiducial nodes in Slicer
-        nodes = slicer.util.getNodesByClass("vtkMRMLMarkupsFiducialNode")
-        for f in nodes:
-            if ((f.GetName() == "FixedImageFiducial") or (f.GetName() == "MovingImageFiducial")):
-                    slicer.mrmlScene.RemoveNode(f)
-        # Remove cropped nodes and result nodes in Slicer
-        nodes2 = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
-        for f in nodes2:
-            if (f.GetName() == "result"):
-                    slicer.mrmlScene.RemoveNode(f)
-            if ("_crop" in f.GetName()):
-                    slicer.mrmlScene.RemoveNode(f)
-        # Reset colors
-        try:
-            self.s1DisplayNode.SetAndObserveColorNodeID(self.Nd0)
-            self.s2DisplayNode.SetAndObserveColorNodeID(self.Nd0)
-            fixedNode = slicer.util.getNode(self.fixedName)
-            s1 = fixedNode.GetScalarVolumeDisplayNode()
-            s1.AutoWindowLevelOn() # TODO Bug - doesn't work?
-        except AttributeError:
-            pass
+  #--------------------------------------------------------------------------------------------
+  #                       Display Results
+  #--------------------------------------------------------------------------------------------
+  # This method displays two images together with different colors which gives fusion effect.
+  #TODO: add more options, colors and transparent values in addition to save fused image
+  def fuseTwoImages(self, firstNode, secondNode):
+        print("=================  Displaying Two Images =====================")
 
-        self.timeLbl.setText("Time: 00:00") # Reset time label
-
-    #--------------------------------------------------------------------------------------------
-    #                       Display Results
-    #--------------------------------------------------------------------------------------------
-    # This method loads all registration images and adjusts their visualization properties.
-    def displayResult(self, firstScan, secondScan, thirdScan):
-        print("=================  Displaying Result =====================")
-        # Remove old Fiducial nodes
-        nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
-        for f in nodes:
-            if ((f.GetName() == "FixedImageFiducial") or (f.GetName() == "MovingImageFiducial")):
-                    slicer.mrmlScene.RemoveNode(f)
-        # The result image file is loaded into the slicer scene.
-        [success , resultNode ]=slicer.util.loadVolume(thirdScan, returnNode=True)  
-        
-        fixedFnm  = basename(os.path.splitext(firstScan)[0])   #(fixedList[len(fixedList) - 1].split('.')[0])
-        movingFnm = basename(os.path.splitext(secondScan)[0])  #= (movingList[len(movingList) - 1].split('.')[0])
-        resultFnm = basename(os.path.splitext(thirdScan)[0])   #(resultList[len(resultList) - 1].split('.')[0])     
-        print(resultFnm)
-        # Check if the result volume was loaded under the name 'result_<NUMBER>' by Slicer
-        # This can happen when running registration multiple times in a single session
-        # TODO The old result nodes are removed in removeOldResults, but this problem still occurs
-        nodes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
-        for f in nodes:
-            match = re.search(r"result_[0-9]*", f.GetName())
-            if match:
-                resultFnm = f.GetName()
-        resultNode = slicer.util.getNode(resultFnm)
-        resultNode.SetName('result') 
-
-        # The Slicer nodes for the images are obtained.
-        fixedNode  = slicer.util.getNode(fixedFnm)
-        movingNode = slicer.util.getNode(movingFnm)
-        #resultNode = slicer.util.getNode('result')
- 
+        #TODO: replace this with a loop or short code
         # The volumes are added to the Red (axial) slice of the scene.
         red_logic = slicer.app.layoutManager().sliceWidget("Red").sliceLogic()
         red_cn = red_logic.GetSliceCompositeNode()
-        red_cn.SetBackgroundVolumeID(fixedNode.GetID())
-        red_cn.SetForegroundVolumeID(resultNode.GetID())
+        red_cn.SetBackgroundVolumeID(firstNode.GetID())
+        red_cn.SetForegroundVolumeID(secondNode.GetID())
         red_cn.SetForegroundOpacity(0.5)
 
         # The volumes are added to the Yellow (sagittal) slice of the scene.
         yellow_logic = slicer.app.layoutManager().sliceWidget("Yellow").sliceLogic()
         yellow_cn = yellow_logic.GetSliceCompositeNode()
-        yellow_cn.SetBackgroundVolumeID(fixedNode.GetID())
-        yellow_cn.SetForegroundVolumeID(resultNode.GetID())
+        yellow_cn.SetBackgroundVolumeID(firstNode.GetID())
+        yellow_cn.SetForegroundVolumeID(secondNode.GetID())
         yellow_cn.SetForegroundOpacity(0.5)
 
         # The volumes are added to the Green (coronal) slice of the scene.
         green_logic = slicer.app.layoutManager().sliceWidget("Green").sliceLogic()
         green_cn = green_logic.GetSliceCompositeNode()
-        green_cn.SetBackgroundVolumeID(fixedNode.GetID())
-        green_cn.SetForegroundVolumeID(resultNode.GetID())
+        green_cn.SetBackgroundVolumeID(firstNode.GetID())
+        green_cn.SetForegroundVolumeID(secondNode.GetID())
         green_cn.SetForegroundOpacity(0.5)
 
         # The layout is set to show only the Red slice by default.
@@ -668,8 +614,8 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
         lm.setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
 
         # The window level for each image is set to be the same value.
-        scan1Node = fixedNode.GetScalarVolumeDisplayNode()
-        scan2Node = resultNode.GetScalarVolumeDisplayNode()
+        scan1Node = firstNode.GetScalarVolumeDisplayNode()
+        scan2Node = secondNode.GetScalarVolumeDisplayNode()
         scan1Node.AutoWindowLevelOff()
         scan2Node.AutoWindowLevelOff()
         scan1Node.SetWindowLevel(1000, 400)
@@ -677,14 +623,15 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
 
         # Get lookup tables for colors
         self.Nd0 = slicer.modules.colors.logic().GetColorTableNodeID(1)   # original color table
-        self.NdG = slicer.modules.colors.logic().GetColorTableNodeID(16)   # green color table
-        self.NdM = slicer.modules.colors.logic().GetColorTableNodeID(20) # magenta color table
+        self.NdG = slicer.modules.colors.logic().GetColorTableNodeID(16)  # green color table
+        self.NdM = slicer.modules.colors.logic().GetColorTableNodeID(20)  # magenta color table
 
-        # The lookup tables for each image are applied. Green is assigned to the fixed Image, while magenta is assigned to both the moving image and the transformed image.
+        # The lookup tables for each image are applied. Green is assigned to the first Image, 
+        # while magenta is assigned to the second  image.
         magentaNode = slicer.modules.colors.logic().GetColorTableNodeID(20)
         greenNode = slicer.modules.colors.logic().GetColorTableNodeID(16)
-        self.s1DisplayNode = fixedNode.GetDisplayNode()
-        self.s2DisplayNode = resultNode.GetDisplayNode()
+        self.s1DisplayNode = firstNode.GetDisplayNode()
+        self.s2DisplayNode = secondNode.GetDisplayNode()
         #resultDisplayNode = resultNode.GetDisplayNode()
         self.s1DisplayNode.SetAndObserveColorNodeID(greenNode)
         self.s2DisplayNode.SetAndObserveColorNodeID(magentaNode)
@@ -697,17 +644,14 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
             sliceWidget = layoutManager.sliceWidget(sliceNode.GetLayoutName())
             if sliceWidget:
                 sliceWidget.sliceLogic().FitSliceToAll()
+            #endif
+        #endfor
 
-        # Update time label
-        self.etm=time.time()
-        tm=self.etm - self.stm
-        self.timeLbl.setText("Time: "+str(tm)+"  seconds")
-        print("==============================================")
-        print(" All tasks are done!")
-        print("==============================================")        
 
-    # Download VisSimTools folder if not found 
-    def checkVisSimTools(self):
+
+
+  # Download VisSimTools folder if not found 
+  def checkVisSimTools(self):
         # TODO: optimise this part to download only the missing files        
         # Check if elastix exist or download it 
         if isfile(self.elastixBinPath.strip()): 
@@ -798,3 +742,75 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
                   print(e)   
                   return -1
             #end try-except  
+  
+#===================================================================
+#                           Test
+#===================================================================
+class CochleaRegTest(ScriptedLoadableModuleTest):
+  """
+  This is the test case for your scripted module.
+  Uses ScriptedLoadableModuleTest base class, available at:
+  https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
+  """
+  logic = CochleaRegLogic()
+
+  def setUp(self):
+    """ Do whatever is needed to reset the state - typically a scene clear will be enough.
+    """
+    slicer.mrmlScene.Clear(0)
+    self.logic.setGlobalVariables()
+
+  def runTest(self):
+    """Run as few or as many tests as needed here.
+    """
+    self.setUp()
+    self.testSlicerCochleaRegistration()
+
+  def testSlicerCochleaRegistration(self):
+
+    self.delayDisplay("Starting the test")
+
+    # to get the links from datastore open http://slicer.kitware.com/midas3/community/23 then select a file and click share to get
+    # the download link
+    # TODO: fix datastore link download problem, the file is created before downloaded   
+    #   imgLaWeb = "http://slicer.kitware.com/midas3/download/item/381221/P100001_DV_L_a"
+    #   imgLbWeb=  "http://slicer.kitware.com/midas3/download/item/381255/P100001_DV_L_b" 
+
+    fixedFnm   = self.logic.outputPath +"/imgF.nrrd"
+    movingFnm  = self.logic.outputPath +"/imgM.nrrd"
+
+    try:         
+        print("Downloading cochlea sample images ...")
+        import urllib
+        imgLaWebLink = "https://mtixnat.uni-koblenz.de/owncloud/index.php/s/eMvm9LHNHEHoZg3/download"
+        imgLbWebLink = "https://mtixnat.uni-koblenz.de/owncloud/index.php/s/gkh39x9GAJQtvHN/download"
+        urllib.urlretrieve (imgLaWebLink ,fixedFnm )
+        urllib.urlretrieve (imgLbWebLink ,movingFnm )
+        print("Downloading complete ...")
+ 
+    except Exception as e:
+                  print("Error: can not download sample files  ...")
+                  print(e)   
+                  return -1
+    #end try-except 
+    [success, fixedVolumeNode] = slicer.util.loadVolume( fixedFnm, returnNode=True)
+    [success, movingVolumeNode] = slicer.util.loadVolume( movingFnm, returnNode=True)
+    
+    # create a fiducial node for cochlea location for cropping    
+    fixedRASpt  = [3.275 , -0.313 , 9.395]
+    movingRASpt = [6.089 , 3.438  , 5.365]
+    
+    fixedFiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
+    fixedFiducialNode.CreateDefaultDisplayNodes()
+    fixedFiducialNode.SetName("fixedPoint")  
+    fixedFiducialNode.AddFiducial(fixedRASpt[0],fixedRASpt[1],fixedRASpt[2])
+
+    movingFiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
+    movingFiducialNode.CreateDefaultDisplayNodes()
+    movingFiducialNode.SetName("movingPoint")  
+    movingFiducialNode.AddFiducial(movingRASpt[0],movingRASpt[1],movingRASpt[2])
+
+    # run the registration
+    self.logic.run(fixedVolumeNode, fixedFiducialNode, movingVolumeNode, movingFiducialNode)
+    self.delayDisplay('Test passed!')
+            
