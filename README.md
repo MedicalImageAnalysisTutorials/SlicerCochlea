@@ -4,12 +4,8 @@
 
 This is a [3D Slicer](https://github.com/Slicer/Slicer) plugin that uses [elastix toolbox](https://github.com/SuperElastix/elastix) for Multi-modal cochlea Images registration, segmentation and analysis. More information can be found [here](https://mtixnat.uni-koblenz.de). The elastix parameters file can be found [here](http://elastix.bigr.nl/wiki/index.php/Par0053)
 
-Updat
-**Pre-requirments:** 
-
-Windows: install [VS2015 runtime](https://www.microsoft.com/en-ca/download/confirmation.aspx?id=48145&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1).
-
-Ubuntu: install openCl using: sudo apt install ocl-icd-opencl-dev
+**Tested on:** 
+Slicer 4.10, Windows 10 and Ubuntu 18.04 
 
 This project contains two modules:
 
