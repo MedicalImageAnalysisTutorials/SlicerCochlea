@@ -4,6 +4,7 @@
 
 This is a [3D Slicer](https://github.com/Slicer/Slicer) plugin that uses [elastix toolbox](https://github.com/SuperElastix/elastix) for Multi-modal cochlea Images registration, segmentation and analysis. More information can be found [here](https://mtixnat.uni-koblenz.de). The elastix parameters file can be found [here](http://elastix.bigr.nl/wiki/index.php/Par0053)
 
+Updat
 **Pre-requirments:** 
 
 Windows: install [VS2015 runtime](https://www.microsoft.com/en-ca/download/confirmation.aspx?id=48145&6B49FDFB-8E5B-4B07-BC31-15695C5A2143=1).
@@ -22,9 +23,16 @@ Please cite our papers:
 
 *  Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Friedrich Lisseck and Roland Jacob, (2017): ACIR: automatic cochlea image registration. In: Proceedings SPIE Medical Imaging 2017: Image Processing;. SPIE. Bd. 10133. S. 10133p1-10133p5. [link](http://spie.org/Publications/Proceedings/Paper/10.1117/12.2254396)
 
-
 Please share your cochlea dataset with us. 
 
 Your contribution is welcome! 
 
 
+Updtae : 6/12/2018
+
+- Logic and testing classes are added. Some useful functions can be called from external modules. User can test the module using Reload and test button.
+- Runtime libraries are included. 
+- Suppport DICOM and other formats.
+- Support filenames with spaces.
+
+Tested on Slicer 4.10, Ubuntu 18.04 and Windows 10
