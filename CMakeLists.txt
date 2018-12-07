@@ -22,6 +22,8 @@ set(EXTENSION_DEPENDS "NA") # Specified as a space separated string, a list or '
 find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
 
+set(EXTENSION_DEPENDS SlicerElastix)
+
 #-----------------------------------------------------------------------------
 # Extension modules
 add_subdirectory(CochleaReg)
