@@ -91,7 +91,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
     print("=======================================================")    
 
     # to avoid conflict between slicer and elastix ITKs
-    os.environ['ITK_AUTOLOAD_PATH'] = ' '
+    #os.environ['ITK_AUTOLOAD_PATH'] = ' '
        
     ScriptedLoadableModuleWidget.setup(self)
       
@@ -259,8 +259,8 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
     self.vissimPath         =  self.segLogic.vissimPath
     self.elastixBinPath     =  self.segLogic.elastixBinPath
     self.transformixBinPath =  self.segLogic.transformixBinPath
-    self.elxInvTransBinPath =  self.segLogic.elxInvTransBinPath
-    self.elastixWebLink     =  self.segLogic.elastixWebLink      
+    #self.elxInvTransBinPath =  self.segLogic.elxInvTransBinPath
+    #self.elastixWebLink     =  self.segLogic.elastixWebLink      
     self.noOutput           =  self.segLogic.noOutput
     self.outputPath         =  self.segLogic.outputPath
     
@@ -285,7 +285,7 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
 
     # windows
     if platform.system()=='Windows':
-           self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TAc8toxaajSdfy7/download")   
+           #self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TAc8toxaajSdfy7/download")   
            self.downSz= 500    
     #endif
     #check if VisSimTools folder is found 
@@ -755,7 +755,7 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
                    md=  stat.S_IRWXU | stat.S_IRGRP | stat.S_IROTH |stat.S_IXGRP |stat.S_IXOTH
                    os.chmod(self.elastixBinPath.strip()    ,  md)
                    os.chmod(self.transformixBinPath.strip(),  md)
-                   os.chmod(self.elxInvTransBinPath.strip(),  md)
+                   #os.chmod(self.elxInvTransBinPath.strip(),  md)
                 #endif 
                 msg.setInformativeText("VisSimTools folder is downloaded and ready to use!")
                 msg.exec_()                      
