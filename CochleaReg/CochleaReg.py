@@ -17,7 +17,7 @@
 #          10133. S. 10133p1-10133p5                                                  #
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
-#  Updated: 6.12.2018                                                                  #    
+#  Updated: 8.12.2018                                                                  #    
 #                                                                                     #  
 #======================================================================================
 
@@ -477,8 +477,8 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
         #endif  
 
         print("=================== Cropping =====================")                           
-        self.fixedCropPath  = self.segLogic.doCropping( self.fixedVolumeNode , self.fixedPoint )                     
-        self.movingCropPath = self.segLogic.doCropping( self.movingVolumeNode, self.movingPoint)                     
+        self.fixedCropPath  = self.segLogic.doCropping( self.fixedVolumeNode , self.fixedPoint, self.croppingLength)                     
+        self.movingCropPath = self.segLogic.doCropping( self.movingVolumeNode, self.movingPoint, self.croppingLength)                     
         
         print("================= Registration =====================")
         #--------------------------------------- define results paths    -------------------------------
@@ -492,21 +492,11 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
         self.resPath = self.outputPath + "/result.nrrd"          
         #---------------------------------------   registration cropped images      -------------------------------
         # register the cropped images  
-        Cmd = self.elastixBinPath  + " -f " + self.fixedCropPath +" -m "+ self.movingCropPath + " -out " + self.outputPath + " -p " + self.parsPath + self.noOutput
-        print("executing: " + Cmd)
-        c=os.system(Cmd)
-        errStr="elastix error ( crop ) at line 482, check the log file"
-        self.chkElxER(c,errStr) # Check if errors happen during elastix execution   
-                               
+        c = self.segLogic.runElastix(self.fixedCropPath,  self.movingCropPath, self.outputPath, self.parsPath, self.noOutput, "496")                               
         #---------------------------------------  transform the moving image     -------------------------------
         # change the size in the transform file to be like the large one                  
-        transFinalPath = self.modifyTransformFile(transCropPath,transFinalPath)                 
-        Cmd = self.transformixBinPath + " -in " + self.movingPath + " -out " + self.outputPath + " -tp " + transFinalPath + self.noOutput
-        print("Executing... " + str(Cmd))
-        c=os.system(Cmd)
-        errStr="Transformix error (cropping) at line 491, check the log file"
-        self.chkElxER(c,errStr) # Check if errors happen during elastix execution 
-        
+        transFinalPath = self.modifyTransformFile(transCropPath,transFinalPath)  
+        c = self.segLogic.runTransformix(self.movingPath, self.outputPath, transFinalPath , self.noOutput, "500")
         [success , resultVolumeNode ]=slicer.util.loadVolume(self.resPath, returnNode=True)  
         resultVolumeNode.SetName('result')           
         #remove the temprary cropped files and nodes  

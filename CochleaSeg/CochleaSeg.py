@@ -18,7 +18,7 @@
 #       Theater OR 2, MICCAI 2018, Granada Spain.                                     #
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
-#  Updated: 6.12.2018                                                                #    
+#  Updated: 8.12.2018                                                                #    
 #                                                                                     #  
 #======================================================================================
 
@@ -261,8 +261,8 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
     self.inputPoint = [0,0,0]
 
     #Cropping Parameters
-    self.croppingLength = 10      
-
+    self.croppingLength = [10,10,10]      
+    
     #Resampling parameters 
     self.RSxyz = [0.125, 0.125,0.125]
        
@@ -371,9 +371,9 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
   #                       Cropping Process  
   #--------------------------------------------------------------------------------------------
   # Using the location as a center point, we cropp around it using the defined cropLength 
-  def doCropping(self, inputVolume, point):
+  def doCropping(self, inputVolume, point, croppingLength ):
         print("================= Begin cropping ... =====================")
-        print("Cochlea location: " + str(point))
+        print("Cochlea location: " + str(point) + "   cropping length: " + str(croppingLength) )
         
         # resampling spacing  
         self.RSx= self.RSxyz[0] ; self.RSy= self.RSxyz[1];     self.RSz= self.RSxyz[2]
@@ -386,7 +386,7 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
         # compute cropping bounds from image information and cropping parameters
         croppingBounds = [[0,0,0],[0,0,0]];   size = [0,0,0];    lower = [0,0,0] ;     upper = [0,0,0]
         for i in range(0,3):
-            size[i] = int((self.croppingLength/spacing[i])/2)
+            size[i] = int((self.croppingLength[i]/spacing[i])/2)
             lower[i] = int(point[i]) - int(size[i])
             upper[i] = dimensions[i] - int(point[i]+size[i])
             # Check if calculated boundaries exceed image dimensions
@@ -447,6 +447,37 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
             self.sideActivated = True
         else:
             self.sideActivated = False
+            
+  #enddef  
+  #--------------------------------------------------------------------------------------------
+  #                        run elastix
+  #--------------------------------------------------------------------------------------------      
+  def runElastix(self, fixed, moving, output, parameters, verbose, line):
+        print ("************  Compute the Transform **********************")
+        cmd =self.elastixBinPath + " -f " + fixed +" -m "+ moving  + " -out " + output  + " -p " + parameters + verbose
+        print("Executing: " + cmd)
+        cTI=os.system(cmd)
+        errStr="elastix error at line"+ line +", check the log files"
+        self.chkElxER(cTI,errStr) # Check if errors happen during elastix execution
+        return cTI
+  #enddef
+
+  #--------------------------------------------------------------------------------------------
+  #                        run transformix
+  #--------------------------------------------------------------------------------------------      
+  def runTransformix(self, img, output, parameters, verbose, line):
+        print ("************  Apply transform **********************")
+        # Apply the transformation to the segmentation image:
+        Cmd = self.transformixBinPath + " -in " + img + " -out " + output  + " -tp " + parameters + verbose
+        print("Executing... " + str(Cmd))
+        cTS=os.system(Cmd)
+        errStr="transformix error at line"+ line +", check the log files"
+        self.chkElxER(cTS,errStr) # Check if errors happen during elastix execution
+        return cTS
+  #enddef
+            
+            
+            
   #===========================================================================================
   #                       Segmentation Process 
   #--------------------------------------------------------------------------------------------        
@@ -524,44 +555,26 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
         #endif  
 
         print("=================== Cropping =====================")                           
-        self.intputCropPath = self.doCropping(self.inputVolumeNode, self.inputPoint)                     
-        print("=================== Segmentation =====================")            
-        print ("************  Compute the Transform **********************")
-        # register the cropped image  to the model  
-        cmd =self.elastixBinPath + " -f " + self.intputCropPath +" -m "+ self.modelCropPath  + " -out " + self.outputPath  + " -p " + self.parsPath + self.noOutput
-        print("Executing: " + cmd)
-        cTI=os.system(cmd)
-        errStr="elastix error at line 546, check the log files"
-        self.chkElxER(cTI,errStr) # Check if errors happen during elastix execution
+        self.intputCropPath = self.doCropping(self.inputVolumeNode, self.inputPoint, self.croppingLength)                     
+
+        print ("************  Register model to cropped input image **********************")
+        cTI = self.runElastix(self.intputCropPath,  self.modelCropPath, self.outputPath, self.parsPath, self.noOutput, "554")
         print ("************  Transform The Segmentation **********************")
-        # Apply the transformation to the segmentation image:
-        Cmd = self.transformixBinPath + " -in " +self.modelCropSegPath + " -out " + self.outputPath  + " -tp " + resTransPath + self.noOutput
-        print("Executing... " + str(Cmd))
-        cTS=os.system(Cmd)
-        errStr="Transformix error at line 553, check the log file"
-        self.chkElxER(cTS,errStr) # Check if errors happen during elastix execution
-       
+        cTS = self.runTransformix(self.modelCropSegPath, self.outputPath, resTransPath , self.noOutput, "556")
         #rename the result file        
         self.resImgLabelPath = self.outputPath  +"/"+ self.inputVolumeNode.GetName()  +"-label.nrrd"
         self.resultFnm = basename(os.path.splitext(self.resImgLabelPath)[0])                 
-        os.rename(resImgPath, self.resImgLabelPath)
-                         
+        os.rename(resImgPath, self.resImgLabelPath)                        
         print ("************  Transform The Points **********************")
         # transform the Scala Tympani Points for length Computation 
-        Cmd = self.transformixBinPath + " -in " +self.modelCropImgStPath + " -out " + self.outputPath  + " -tp " + resTransPath + self.noOutput
-        print("Executing... " + str(Cmd))
-        cTP=os.system(Cmd)
-        errStr="Transformix error, transform points at line 566, check the log file"
-        self.chkElxER(cTP,errStr) # Check if errors happen during elastix execution
-
+        cTP = self.runTransformix(self.modelCropImgStPath, self.outputPath, resTransPath , self.noOutput, "556")
         #rename the result image file        
         self.resImgPtsPath = self.outputPath  +"/"+ self.inputVolumeNode.GetName()  + "-IPtsSt.nrrd"
-        os.rename(resImgPath, self.resImgPtsPath )       
-    
+        os.rename(resImgPath, self.resImgPtsPath )           
         # Load the image poins, calculat the length and crete the points          
-        [success, self.resImgPtsNode] = slicer.util.loadVolume(self.resImgPtsPath, returnNode=True)    
-       
+        [success, self.resImgPtsNode] = slicer.util.loadVolume(self.resImgPtsPath, returnNode=True)           
         # Convert the image points to fiducials
+        print ("************  create fiducial from the scala transformed image **********************")
         self.image2points(self.resImgPtsNode) 
 
         # Display the result if no error
