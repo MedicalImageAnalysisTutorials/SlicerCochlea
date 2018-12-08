@@ -36,6 +36,8 @@ from os.path import basename
 from PythonQt import BoolResult
 from shutil import copyfile
 
+import Elastix
+
 #TODO:
 #   Registration download all stuff for both registration and segmentation.
 #   use registration module and commong functions:  
@@ -100,7 +102,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
     print("=======================================================")           
         
     # to avoid conflict between slicer and elastix ITKs
-    os.environ['ITK_AUTOLOAD_PATH'] = ' '
+    # os.environ['ITK_AUTOLOAD_PATH'] = ' '
 
     ScriptedLoadableModuleWidget.setup(self)
     
@@ -232,13 +234,16 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
 #===================================================================
 class CochleaSegLogic(ScriptedLoadableModuleLogic):
 
+
+  ElastixLogic = Elastix.ElastixLogic()
+  ElastixBinFolder = ElastixLogic.getElastixBinDir()+"/"
   #set global paths and parameters
   def setGlobalVariables(self):
     self.vissimPath    = expanduser("~/VisSimTools")
-    self.elastixBinPath    =  self.vissimPath + "/sw/elastix-4.9.0/bin/elastix"
-    self.transformixBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/transformix"
-    self.elxInvTransBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/elxInvertTransform"
-    self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/VoxfbJ1kHw0EAQ6/download")      
+    self.elastixBinPath     =  self.ElastixBinFolder + "elastix"
+    self.transformixBinPath =  self.ElastixBinFolder + "transformix"
+    #self.elxInvTransBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/elxInvertTransform"
+    #self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/VoxfbJ1kHw0EAQ6/download")      
     self.othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TCLlSzwoGK5yX0v/download")   
     self.noOutput= " >> /dev/null"
     self.outputPath = self.vissimPath+"/outputs"
@@ -246,7 +251,7 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
     self.modelPath = self.vissimPath +"/models/modelCochlea" 
     
     # Add runtime librarires        
-    os.environ['LD_LIBRARY_PATH'] = self.vissimPath + "/sw/elastix-4.9.0/lib"
+    # os.environ['LD_LIBRARY_PATH'] = self.vissimPath + "/sw/elastix-4.9.0/lib"
 
     self.downSz= 160    
     self.winOS=0       
@@ -265,8 +270,8 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
     if platform.system()=='Windows':
            self.elastixBinPath    = self.elastixBinPath      + ".exe"
            self.transformixBinPath =self.transformixBinPath  + ".exe"
-           self.elxInvTransBinPath = self.elxInvTransBinPath + ".exe"  
-           self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TAc8toxaajSdfy7/download")   
+           #self.elxInvTransBinPath = self.elxInvTransBinPath + ".exe"  
+           #self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TAc8toxaajSdfy7/download")   
            self.noOutput= " > nul"   
            self.winOS=1    
            self.downSz= 500    
@@ -389,11 +394,11 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
                     lower[i] = 0
             #endif        
             if upper[i] > dimensions[i]:
-                   upper[i] = dimensions[i]
+                   upper[i] = int(dimensions[i])
             #endif
         #endfor   
         croppingBounds = [lower,upper]
-		# Call SimpleITK CropImageFilter
+	# Call SimpleITK CropImageFilter
         print("Cropping with " + str(croppingBounds[0]) + " and " + str(croppingBounds[1]) + ".")
         inputImage = sitkUtils.PullVolumeFromSlicer(inputVolume.GetID())
         cropper = sitkUtils.sitk.CropImageFilter()
@@ -406,7 +411,8 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
         for f in crNodes:
             if nodeName in f.GetName():
                  f.SetName(nodeName) 
-                 break           #endif
+                 break         
+            #endif
         #endfor    
 
         self.croppedNode = slicer.util.getNode(nodeName)
