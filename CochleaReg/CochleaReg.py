@@ -801,8 +801,8 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
 
     try:         
         import urllib
-        imgLaWebLink = "https://mtixnat.uni-koblenz.de/owncloud/index.php/s/eMvm9LHNHEHoZg3/download"
-        imgLbWebLink = "https://mtixnat.uni-koblenz.de/owncloud/index.php/s/gkh39x9GAJQtvHN/download"
+        imgLaWebLink = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
+        imgLbWebLink = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
         urllib.urlretrieve (imgLaWebLink ,fixedFnm )
         urllib.urlretrieve (imgLbWebLink ,movingFnm )
         print("Downloading complete ...")

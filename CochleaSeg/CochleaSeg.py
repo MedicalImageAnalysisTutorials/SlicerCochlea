@@ -964,8 +964,8 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
     try:         
         print("Downloading cochlea sample image ...")
         import urllib
-        imgLaWebLink = "https://mtixnat.uni-koblenz.de/owncloud/index.php/s/eMvm9LHNHEHoZg3/download"
-        #imgLaWebLink = "http://slicer.kitware.com/midas3/download/item/381221/P100001_DV_L_a"
+        imgLaWebLink = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
+        imgLbWebLink = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
         urllib.urlretrieve (imgLaWebLink ,fnm )
     except Exception as e:
                   print("Error: can not download sample file  ...")
