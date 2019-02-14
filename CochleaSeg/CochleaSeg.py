@@ -244,7 +244,7 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
     self.transformixBinPath =  self.ElastixBinFolder + "transformix"
     #self.elxInvTransBinPath = self.vissimPath + "/sw/elastix-4.9.0/bin/elxInvertTransform"
     #self.elastixWebLink =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/VoxfbJ1kHw0EAQ6/download")      
-    self.othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/TCLlSzwoGK5yX0v/download")   
+    self.othersWebLink  =  ("https://cloud.uni-koblenz-landau.de/s/nXKrbFNq4B3G66p/download")   
     self.noOutput= " >> /dev/null"
     self.outputPath = self.vissimPath+"/outputs"
     self.parsPath = self.vissimPath +"/pars/parCochSeg.txt"

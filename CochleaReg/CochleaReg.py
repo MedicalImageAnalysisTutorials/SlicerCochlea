@@ -264,7 +264,7 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
     self.noOutput           =  self.segLogic.noOutput
     self.outputPath         =  self.segLogic.outputPath
     
-    self.othersWebLink  =  ("https://mtixnat.uni-koblenz.de/owncloud/index.php/s/x6kts1R4f5RkDcN/download")   
+    self.othersWebLink  =  ("https://cloud.uni-koblenz-landau.de/s/GC82zESbzaDj4dq/download")   
     self.parsPath           = self.vissimPath +"/pars/parCochSeg.txt"
     self.downSz             = 160    
     self.winOS              =0       
