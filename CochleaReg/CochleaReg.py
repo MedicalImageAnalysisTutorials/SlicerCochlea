@@ -533,7 +533,7 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
   # This method checks if errors happen during elastix execution
   def chkElxER(self,c, s):
         if c>0:
-           qt.QMessageBox.critical(slicer.util.mainWindow(),'Registration', s)
+           #qt.QMessageBox.critical(slicer.util.mainWindow(),'Registration', s)
            print(s)  
            return False
         else: 
@@ -671,12 +671,12 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
            print("elastix binaries are found in " + self.elastixBinPath )
         else: 
             print("elastix binaries are missing, trying to download ... ")
-            msg = qt.QMessageBox()
-            msg.setIcon(qt.QMessageBox.Information)
-            msg.setText("elastix binaries are missing!")
-            msg.setInformativeText("VisSimTools elastix binaries will be downloaded, this may take some time, please wait!")
-            msg.setWindowTitle("VisSimTools")
-            msg.exec_()
+            #msg = qt.QMessageBox()
+            #msg.setIcon(qt.QMessageBox.Information)
+            #msg.setText("elastix binaries are missing!")
+            #msg.setInformativeText("VisSimTools elastix binaries will be downloaded, this may take some time, please wait!")
+            #msg.setWindowTitle("VisSimTools")
+            #msg.exec_()
             try:                               
                 print("Downloading VisSimTools elastix ...")
                 #cmd=" wget --no-check-certificate ""https://mtixnat.uni-koblenz.de/owncloud/index.php/s/3bYztVkSrJxdpDz/download"" -O ~/VisSimToolsTmp.zip"               
@@ -711,12 +711,12 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
            print("Other files are found !" )
         else: 
             print("Other files are  missing, trying to download ... ")
-            msg = qt.QMessageBox()
-            msg.setIcon(qt.QMessageBox.Information)
-            msg.setText("Other files are missing!")
-            msg.setInformativeText("VisSimTools other files will be downloaded, this may take some time, please wait!")
-            msg.setWindowTitle("VisSimTools")
-            msg.exec_()
+            #msg = qt.QMessageBox()
+            #msg.setIcon(qt.QMessageBox.Information)
+            #msg.setText("Other files are missing!")
+            #msg.setInformativeText("VisSimTools other files will be downloaded, this may take some time, please wait!")
+            #msg.setWindowTitle("VisSimTools")
+            #msg.exec_()
             try:                               
                 print("Downloading VisSimTools others ...")
                 vissimZip = expanduser("~/VisSimToolsTmp.zip")
