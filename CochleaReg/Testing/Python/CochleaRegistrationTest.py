@@ -5,4 +5,4 @@
 import CochleaReg
 
 CT = CochleaReg.CochleaRegTest()
-CT.runExternaltest()
+CT.testSlicerCochleaRegistration()
