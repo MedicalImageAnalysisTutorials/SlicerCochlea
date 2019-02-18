@@ -765,29 +765,24 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
   Uses ScriptedLoadableModuleTest base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
-  #logic = CochleaRegLogic()
+  logic = CochleaRegLogic()
 
   def setUp(self):
     """ Do whatever is needed to reset the state - typically a scene clear will be enough.
     """
     slicer.mrmlScene.Clear(0)
-    #self.logic.setGlobalVariables()
+    self.logic.setGlobalVariables()
 
   def runTest(self):
     """Run as few or as many tests as needed here.
     """
     self.setUp()
-    #self.testSlicerCochleaRegistration()
+    self.testSlicerCochleaRegistration()
 
   def testSlicerCochleaRegistration(self):
-      self.delayDisplay("Starting the test")
-      print("test solving the test problem")
-      self.delayDisplay('Test passed!')
- 
-  def testSlicerCochleaRegistrationBK(self):
 
     self.delayDisplay("Starting the test")
-    self.logic = CochleaRegLogic()
+
     # to get the links from datastore open http://slicer.kitware.com/midas3/community/23 then select a file and click share to get
     # the download link
     # TODO: fix datastore link download problem, the file is created before downloaded   
