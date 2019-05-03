@@ -875,7 +875,7 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
             #end try-except 
         #endif
         # check if other files exist
-        if isfile(self.parsPath.strip()): 
+        if  os.path.exist(self.modelPath): 
            print("Other files are found !" )
            print("  Parameter file: " + self.parsPath)
            print("  Output folder : " + self.outputPath)            
