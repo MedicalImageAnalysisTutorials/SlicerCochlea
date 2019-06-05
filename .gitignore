@@ -1,4 +1,6 @@
 # Compiled source
 ###################
 build/*
-
+*.pyc
+*.project
+*.pydevproject
