@@ -747,7 +747,7 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
         nimgMax = tmpImgArray.max()
         nimgMin = tmpImgArray.min()
 
-        b= list(zip( *np.where(tmpImgArray > (nimgMax/2) ) ) ))
+        b= list(zip( *np.where(tmpImgArray > (nimgMax/2) )))
         NoPts = len(b)
         ptsIJK   =np.zeros((NoPts,4))
         ptsIJKtmp=np.zeros((NoPts,4))
