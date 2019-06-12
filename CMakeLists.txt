@@ -18,19 +18,20 @@ Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Friedrich Lissek, Roland Jac
 set(EXTENSION_ICONURL "https://github.com/MedicalImageAnalysisTutorials/SlicerCochlea/raw/master/SlicerCochlea.png")
 set(EXTENSION_SCREENSHOTURLS "https://raw.githubusercontent.com/MedicalImageAnalysisTutorials/SlicerCochlea/master/Screenshots/c.png https://raw.githubusercontent.com/MedicalImageAnalysisTutorials/SlicerCochlea/master/Screenshots/s2.png https://raw.githubusercontent.com/MedicalImageAnalysisTutorials/SlicerCochlea/master/Screenshots/r1.png https://raw.githubusercontent.com/MedicalImageAnalysisTutorials/SlicerCochlea/master/Screenshots/s1.png https://raw.githubusercontent.com/MedicalImageAnalysisTutorials/SlicerCochlea/master/Screenshots/s2.png")
 
-set(EXTENSION_DEPENDS "NA") # Specified as a space separated string, a list or 'NA' if any
+set(EXTENSION_DEPENDS SlicerElastix) # Specified as a space separated string, a list or 'NA' if any
 
 #-----------------------------------------------------------------------------
 # Extension dependencies
 find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
 
-set(EXTENSION_DEPENDS SlicerElastix)
+
 
 #-----------------------------------------------------------------------------
 # Extension modules
 add_subdirectory(CochleaReg)
 add_subdirectory(CochleaSeg)
+add_subdirectory(VisSimCommon)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------

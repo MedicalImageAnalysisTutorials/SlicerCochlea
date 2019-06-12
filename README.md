@@ -2,7 +2,7 @@
 
 <img src="https://github.com/MedicalImageAnalysisTutorials/SlicerCochlea/blob/master/Cochlea.png" width="400" height="400">
 
-This is a [3D Slicer](https://github.com/Slicer/Slicer) plugin that uses [elastix toolbox](https://github.com/SuperElastix/elastix) for Multi-modal cochlea Images registration, segmentation and analysis. More information can be found [here](https://mtixnat.uni-koblenz.de). The elastix parameters file can be found [here](http://elastix.bigr.nl/wiki/index.php/Par0053)
+This is a [3D Slicer](https://gaithub.com/Slicer/Slicer) plugin that uses [elastix toolbox](https://github.com/SuperElastix/elastix) for Multi-modal cochlea Images registration, segmentation and analysis. More information can be found [here](https://mtixnat.uni-koblenz.de). The elastix parameters file can be found [here](http://elastix.bigr.nl/wiki/index.php/Par0053)
 
 **Tested on:** 
 Slicer 4.10, Windows 10 and Ubuntu 18.04 
