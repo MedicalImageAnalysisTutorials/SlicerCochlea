@@ -8,7 +8,9 @@
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.11.0                                                                      #
-#  Updated: 12.6.2019                                                                 # #-------------------------------------------------------------------------------------#
+#  Updated: 12.6.2019                                                                 # 
+#TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide
+#-------------------------------------------------------------------------------------#
                                                                                      #
 # this file can be updated andreload automatically when call dependant module by      # 
 # modifing bin/python/slicer/ScriptedLoadableModule.py                                #
@@ -19,7 +21,9 @@
 #       if self.moduleName in VisSimModules:
 #          print("Reloading VisSimCommon ............")
 #          slicer.util.reloadScriptedModule("VisSimCommon")
-#       slicer.util.reloadScriptedModule(self.moduleName)    
+#       slicer.util.reloadScriptedModule(self.moduleName)  
+#TODO: check how to override onReload in the current module
+  
 #======================================================================================
 import os, re , datetime, time ,shutil, unittest, logging, zipfile,  stat,  inspect
 import sitkUtils, sys ,math, platform  , glob,subprocess, urllib.request
@@ -912,16 +916,16 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       slicer.modules.markups.logic().StartPlaceMode(placeModePersistance)
 
       # Observe scene for updates
-      self.addObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].MarkupAddedEvent,   self.onInputFiducialNodeMarkupAddedEvent)
+      self.addObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointAddedEvent,   self.onInputFiducialNodePointAddedEvent)
       self.modObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointModifiedEvent, self.onInputFiducialNodePointModifiedEvent)
-      self.rmvObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].MarkupRemovedEvent, self.onInputFiducialNodeMarkupRemovedEvent)
+      self.rmvObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointRemovedEvent, self.onInputFiducialNodePointRemovedEvent)
       return  self.inputFiducialNodes[reg]   
   #enddef
 
   #--------------------------------------------------------------------------------------------
-  #    InputFiducialNode MarkupAddedEvent
+  #    InputFiducialNode PointAddedEvent
   #--------------------------------------------------------------------------------------------
-  def onInputFiducialNodeMarkupAddedEvent(self, caller, event):
+  def onInputFiducialNodePointAddedEvent(self, caller, event):
       # it seems this action happened after adding new fiducial
       print("Fiducial adding event!")
       #remove previous observer
@@ -951,7 +955,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       # get the new IJK position and display it
       rasPt = [0,0,0] 
       i = caller.GetAttribute('Markups.MovingMarkupIndex')
-      if not (i is None):
+      if not (i is None or i==''):
          i=int(i)
          caller.GetNthFiducialPosition(i,rasPt)
          self.inputPoint = self.ptRAS2IJK(caller, self.inputVolumeNode, i)        
@@ -959,7 +963,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endif   
   #enddef
 
-  def onInputFiducialNodeMarkupRemovedEvent(self, caller, event):
+  def onInputFiducialNodePointRemovedEvent(self, caller, event):
       #print("Fiducial removed event!")
       caller.RemoveObserver(self.rmvObs)
       #i = caller.GetNumberOfFiducials()-1
