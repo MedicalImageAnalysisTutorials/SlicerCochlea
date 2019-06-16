@@ -18,8 +18,9 @@
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
-#  Updated: 12.6.2019                                                                 # #-------------------------------------------------------------------------------------#
+#  SLicer 4.10
+#  Updated: 16.6.2019                                                                 #    
+#-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
 #  - Use transformation directly to transform the points.                             #
@@ -27,7 +28,7 @@
 #  - Logic functions are independent and can be called from external script.          #
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile, urllib.request,  stat,  inspect
+import os, re , datetime, time ,shutil, unittest, logging, zipfile, urllib, urllib2, stat,  inspect
 import sitkUtils, sys ,math, platform  
 import  numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
@@ -389,7 +390,7 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       if not os.path.exists(fixedImgPath):
          try:         
              print("Downloading cochlea sample image ...")
-             urllib.request.urlretrieve (fixedImgWebLink ,fixedImgPath )
+             urllib.urlretrieve (fixedImgWebLink ,fixedImgPath )
          except Exception as e:
              print("Error: can not download fixed image sample file  ...")
              print(e)   
@@ -399,7 +400,7 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       if not os.path.exists(movingImgPath):
          try:         
              print("Downloading cochlea sample image ...")
-             urllib.request.urlretrieve (movingImgWebLink ,movingImgPath )
+             urllib.urlretrieve (movingImgWebLink ,movingImgPath )
          except Exception as e:
              print("Error: can not download moving image sample file  ...")
              print(e)   

@@ -19,8 +19,9 @@
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
-#  Updated: 12.6.2019                                                                 # #-------------------------------------------------------------------------------------#
+#  SLicer 4.10
+#  Updated: 16.6.2019                                                                 #    
+#-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
 #  - Use transformation directly to transform the points.                             #
@@ -28,7 +29,7 @@
 #  - Logic functions are independent and can be called from external script.          #
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile,urllib.request ,  stat,  inspect
+import os, re , datetime, time ,shutil, unittest, logging, zipfile,urllib , urllib2, stat,  inspect
 import sitkUtils, sys ,math, platform  
 import numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
@@ -106,7 +107,6 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
     print("=======================================================")   
     print("   Automatic Cochlea Image Segmentation               ")
     print("=======================================================")           
-
     ScriptedLoadableModuleWidget.setup(self)
     
     # to access logic class functions and setup global variables
@@ -450,7 +450,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
       if not os.path.exists(imgPath):
          try:         
              print("Downloading cochlea sample image ...")
-             urllib.request.urlretrieve (imgWebLink ,imgPath )
+             urllib.urlretrieve (imgWebLink ,imgPath )
          except Exception as e:
              print("Error: can not download sample file  ...")
              print(e)   
