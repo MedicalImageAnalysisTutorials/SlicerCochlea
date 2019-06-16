@@ -1,3 +1,7 @@
+#-----------------------------------------
+#          SlicerCochlea master
+#          updated: 16.6.2019
+#-----------------------------------------
 cmake_minimum_required(VERSION 3.5)
 
 project(SlicerCochlea)
