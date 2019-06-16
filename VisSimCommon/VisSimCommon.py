@@ -7,11 +7,8 @@
 #  [1] https://www.slicer.org                                                         #
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
-#  Updated: 12.6.2019                                                                 # 
-#TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide
-#-------------------------------------------------------------------------------------#
-                                                                                     #
+#  Slicer 4.10
+#  Updated: 16.6.2019                                                                 # #-------------------------------------------------------------------------------------#
 # this file can be updated andreload automatically when call dependant module by      # 
 # modifing bin/python/slicer/ScriptedLoadableModule.py                                #
 #    def onReload(self):
@@ -21,12 +18,10 @@
 #       if self.moduleName in VisSimModules:
 #          print("Reloading VisSimCommon ............")
 #          slicer.util.reloadScriptedModule("VisSimCommon")
-#       slicer.util.reloadScriptedModule(self.moduleName)  
-#TODO: check how to override onReload in the current module
-  
+#       slicer.util.reloadScriptedModule(self.moduleName)    
 #======================================================================================
 import os, re , datetime, time ,shutil, unittest, logging, zipfile,  stat,  inspect
-import sitkUtils, sys ,math, platform  , glob,subprocess, urllib.request
+import sitkUtils, sys ,math, platform  , glob,subprocess, urllib, urllib2
 import numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
 from __main__ import vtk, qt, ctk, slicer
@@ -70,10 +65,8 @@ class VisSimCommonWidget(ScriptedLoadableModuleWidget):
       self.mainCollapsibleBtn = ctk.ctkCollapsibleButton()
       self.mainCollapsibleBtn.text = "VisSim Common"
       self.layout.addWidget(self.mainCollapsibleBtn)
-  #enddef
 
 class VisSimCommonLogic(ScriptedLoadableModuleLogic):
-  
   ElastixLogic = Elastix.ElastixLogic()
   ElastixBinFolder = ElastixLogic.getElastixBinDir()+"/"
 
@@ -209,7 +202,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          try:                               
                 print("      Downloading VisSimTools others ...")
                 vissimZip = expanduser("~/VisSimToolsTmp.zip")      
-                uFile = urllib.request.urlretrieve(othersWebLink,vissimZip)                       
+                uFile = urllib.urlretrieve(othersWebLink,vissimZip)                       
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
                 zip_ref.extractall(expanduser("~/"))
@@ -916,16 +909,16 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       slicer.modules.markups.logic().StartPlaceMode(placeModePersistance)
 
       # Observe scene for updates
-      self.addObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointAddedEvent,   self.onInputFiducialNodePointAddedEvent)
+      self.addObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].MarkupAddedEvent,   self.onInputFiducialNodeMarkupAddedEvent)
       self.modObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointModifiedEvent, self.onInputFiducialNodePointModifiedEvent)
-      self.rmvObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointRemovedEvent, self.onInputFiducialNodePointRemovedEvent)
+      self.rmvObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].MarkupRemovedEvent, self.onInputFiducialNodeMarkupRemovedEvent)
       return  self.inputFiducialNodes[reg]   
   #enddef
 
   #--------------------------------------------------------------------------------------------
-  #    InputFiducialNode PointAddedEvent
+  #    InputFiducialNode MarkupAddedEvent
   #--------------------------------------------------------------------------------------------
-  def onInputFiducialNodePointAddedEvent(self, caller, event):
+  def onInputFiducialNodeMarkupAddedEvent(self, caller, event):
       # it seems this action happened after adding new fiducial
       print("Fiducial adding event!")
       #remove previous observer
@@ -955,7 +948,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       # get the new IJK position and display it
       rasPt = [0,0,0] 
       i = caller.GetAttribute('Markups.MovingMarkupIndex')
-      if not (i is None or i==''):
+      if not (i is None):
          i=int(i)
          caller.GetNthFiducialPosition(i,rasPt)
          self.inputPoint = self.ptRAS2IJK(caller, self.inputVolumeNode, i)        
@@ -963,7 +956,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endif   
   #enddef
 
-  def onInputFiducialNodePointRemovedEvent(self, caller, event):
+  def onInputFiducialNodeMarkupRemovedEvent(self, caller, event):
       #print("Fiducial removed event!")
       caller.RemoveObserver(self.rmvObs)
       #i = caller.GetNumberOfFiducials()-1
@@ -990,7 +983,11 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            if tblNode is None:
               print("create new table  .........................................")
               tblNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTableNode")
-              tblNode.SetName(masterNode.GetName()[0:-7]+"_tbl")
+              #tblNode.SetName(masterNode.GetName()[0:-7]+"_tbl")
+              #this work for SpineTools
+              #TODO: check if it works with vertebra tools
+              tblNode.SetName(masterNode.GetName()[0:-3]+"_tbl")
+
               for i in range(5):
                  tblNode.AddColumn()
               #endfor 
