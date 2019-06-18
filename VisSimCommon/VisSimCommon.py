@@ -736,6 +736,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
              print(" Error: can not remove " + fnm)
              print(e)   
       #endtry  
+      print("removing temp nodes ...!") 
       nodes = slicer.util.getNodesByClass('vtkMRMLScalarVolumeNode')
       for f in nodes:
           if "_Crop"  in f.GetName(): slicer.mrmlScene.RemoveNode(f)
