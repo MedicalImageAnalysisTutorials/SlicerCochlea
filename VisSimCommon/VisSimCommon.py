@@ -470,22 +470,27 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            #inputCropIsoPath = os.path.splitext(inputVolume.GetStorageNode().GetFileName())[0] +"_C"+str(vtID) +"_crop_iso.nrrd"  
            print("iso cropped: "+inputCropIsoPath)
            resampleSpacing = " ["+ str(self.RSx) + "," + str(self.RSy) + "," + str(self.RSz) + "] "
-           #TODO: Get Slicer PATH
-           SlicerPath =os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
-           SlicerBinPath = os.path.join(SlicerPath,"Slicer")  
-           ResampleBinPath =  os.path.join( (glob.glob(os.path.join(SlicerPath,"lib","Slicer") + '*'))[0]    , "cli-modules","ResampleScalarVolume" )       
-           print(ResampleBinPath)
-           #ResampleBinPath =  os.path.join(*ResampleBinPath.split(","))            
-           resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath   
+           try:
+               resamplingCommand = slicer.modules.resamplescalarvolume.path
+           except AttributeError:
+               #TODO: Get Slicer PATH
+               SlicerPath =os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
+               SlicerBinPath = os.path.join(SlicerPath,"Slicer")
+               ResampleBinPath =  os.path.join( (glob.glob(os.path.join(SlicerPath,"lib","Slicer") + '*'))[0]    , "cli-modules","ResampleScalarVolume" )
+               if sys.platform == 'win32':
+                   ResampleBinPath + ".exe"
+                   resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
+               else:
+                   #note: in windows, no need to use --launch
+                   resamplingCommand = ResampleBinPath + ".exe"
+
+           print(resamplingCommand)
+
            si = None 
            currentOS = sys.platform           
            cmdPars = " -i linear -s "+ resampleSpacing + inputCropPath +" "+inputCropIsoPath  
            Cmd = resamplingCommand  + cmdPars
-           
            if sys.platform == 'win32':
-              #note: in windows, no need to use --launch
-              SlicerBinPath = SlicerBinPath +".exe"
-              resamplingCommand = ResampleBinPath + ".exe"
               print(os.path.getsize(resamplingCommand))
               si = subprocess.STARTUPINFO()
               si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
