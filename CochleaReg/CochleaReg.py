@@ -32,12 +32,13 @@ import sitkUtils, sys ,math, platform
 import  numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
 from __main__ import vtk, qt, ctk, slicer
-from slicer.ScriptedLoadableModule import *   
+from slicer.ScriptedLoadableModule import *
+import SampleData
+
 from copy import deepcopy
 from collections import defaultdict
 from os.path import expanduser
 from os.path import isfile
-from os.path import basename
 from PythonQt import BoolResult
 from shutil import copyfile
 
@@ -269,13 +270,17 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       resDefPath    = os.path.join(self.vsc.vtVars['outputPath'] , movingVolumeNode.GetName()+"_dFld"+self.vsc.vtVars['imgType'])
       transNodeName = movingVolumeNode.GetName() + "_Transform"
 
-      # Original images paths
+      # Save original fixed and moving images
+      if fixedVolumeNode.GetStorageNode() is None:
+          fixedImgPath = os.path.join(self.vsc.vtVars['vissimPath'], fixedVolumeNode.GetName()+".nrrd")
+          slicer.util.saveNode(fixedVolumeNode, fixedImgPath)
       fixedPath = fixedVolumeNode.GetStorageNode().GetFileName()
-      fixedName  = basename(os.path.splitext(fixedPath)[0])   
-        
+
+      if movingVolumeNode.GetStorageNode() is None:
+          movingImgPath = os.path.join(self.vsc.vtVars['vissimPath'], movingVolumeNode.GetName()+".nrrd")
+          slicer.util.saveNode(movingVolumeNode, movingImgPath)
       movingPath = movingVolumeNode.GetStorageNode().GetFileName()
-      movingName  = basename(os.path.splitext(movingPath)[0])   
-        
+
       # Get IJK point from the fiducial to use in cropping          
       fixedPoint = self.vsc.ptRAS2IJK(fixedFiducialNode,fixedVolumeNode,0)
       print("run fixed point: ============================")
@@ -347,7 +352,6 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       #remove the tempnode and load the original
       slicer.mrmlScene.RemoveNode(movingVolumeNode); 
       [success, movingVolumeNode] = slicer.util.loadVolume(movingPath, returnNode = True)
-      movingVolumeNode.SetName(movingVolumeNode.GetStorageNode().GetFileNameWithoutExtension())
       if  (cTI==0) and (cTR==0):
           print("No error is reported during registeration ...")
       else:
@@ -372,50 +376,37 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
   
   def runTest(self):
       self.setUp()
-
-      self.vsc   = VisSimCommon.VisSimCommonLogic()   
-      self.vsc.vtVars = self.vsc.setGlobalVariables(0)
-
-      fixedImgPath  = os.path.join(self.vsc.vtVars['vissimPath'],"imgFixed.nrrd")
-      movingImgPath = os.path.join(self.vsc.vtVars['vissimPath'],"imgMoving.nrrd")
-
-      fixedPoint  = [220,242,78]
-      movingPoint = [196,217,93]
-
-      fixedImgWebLink  = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
-      movingImgWebLink = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
-
-      # don't download if already downloaded                       
-      if not os.path.exists(fixedImgPath):
-         try:         
-             print("Downloading cochlea sample image ...")
-             urllib.request.urlretrieve (fixedImgWebLink ,fixedImgPath )
-         except Exception as e:
-             print("Error: can not download fixed image sample file  ...")
-             print(e)   
-             return -1
-         #end try-except 
-      #endif
-      if not os.path.exists(movingImgPath):
-         try:         
-             print("Downloading cochlea sample image ...")
-             urllib.request.urlretrieve (movingImgWebLink ,movingImgPath )
-         except Exception as e:
-             print("Error: can not download moving image sample file  ...")
-             print(e)   
-             return -1
-         #end try-except 
-      #endif
-
-      self.testSlicerCochleaRegistration(fixedImgPath , fixedPoint, movingImgPath, movingPoint)
-
+      self.testSlicerCochleaRegistration()
   #enddef
 
-  def testSlicerCochleaRegistration(self, fixedImgPath , fixedPoint, movingImgPath, movingPoint):
+  def testSlicerCochleaRegistration(self, fixedImgPath=None, fixedPoint=None, movingImgPath=None, movingPoint=None):
 
       self.delayDisplay("Starting testSlicerCochleaRegistration test")
       self.stm=time.time()
 
+      if fixedPoint is None:
+          fixedPoint = [220,242,78]
+
+      if movingPoint is None:
+          movingPoint = [196,217,93]
+
+      if fixedImgPath is None:
+          fixedVolumeNode = SampleData.downloadFromURL(
+              nodeNames='P100001_DV_L_a',
+              fileNames='P100001_DV_L_a.nrrd',
+              uris='https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download',
+              checksums='SHA256:d7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5')[0]
+      else:
+          [success, fixedVolumeNode]  = slicer.util.loadVolume(fixedImgPath, returnNode=True)
+
+      if movingImgPath is None:
+          movingVolumeNode = SampleData.downloadFromURL(
+              nodeNames='P100001_DV_L_b',
+              fileNames='P100001_DV_L_b.nrrd',
+              uris='https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download',
+              checksums='SHA256:9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5')[0]
+      else:
+          [success, movingVolumeNode] = slicer.util.loadVolume(movingImgPath, returnNode=True)
 
       self.logic = CochleaRegLogic()
       self.vsc   = VisSimCommon.VisSimCommonLogic()   
@@ -426,10 +417,7 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       # remove contents of output folder
       self.vsc.removeOtputsFolderContents()
 
-      # record duration of the test    
-
-      [success, fixedVolumeNode]  = slicer.util.loadVolume( fixedImgPath, returnNode=True)
-      [success, movingVolumeNode] = slicer.util.loadVolume( movingImgPath, returnNode=True)
+      # record duration of the test
     
       # create a fiducial node for cochlea locations for cropping    
       fixedPointRAS = self.vsc.ptIJK2RAS(fixedPoint , fixedVolumeNode) 
