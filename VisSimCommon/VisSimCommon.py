@@ -8,7 +8,7 @@
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.10
-#  Updated: 16.6.2019                                                                 # #-------------------------------------------------------------------------------------#
+#  Updated: 18.6.2019                                                                 # #-------------------------------------------------------------------------------------#
 # this file can be updated andreload automatically when call dependant module by      # 
 # modifing bin/python/slicer/ScriptedLoadableModule.py                                #
 #    def onReload(self):
@@ -32,6 +32,7 @@ from os.path import expanduser
 from os.path import isfile
 from os.path import basename
 from PythonQt import BoolResult
+import SampleData
 
 import SegmentStatistics
 import Elastix
@@ -463,18 +464,25 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            #inputCropIsoPath = os.path.splitext(inputVolume.GetStorageNode().GetFileName())[0] +"_C"+str(vtID) +"_crop_iso.nrrd"  
            print("iso cropped: "+inputCropIsoPath)
            resampleSpacing = " ["+ str(self.RSx) + "," + str(self.RSy) + "," + str(self.RSz) + "] "
-           #TODO: Get Slicer PATH
-           SlicerPath =os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
-           SlicerBinPath = os.path.join(SlicerPath,"Slicer")  
-           ResampleBinPath =  os.path.join( (glob.glob(os.path.join(SlicerPath,"lib","Slicer") + '*'))[0]    , "cli-modules","ResampleScalarVolume" )       
-           print(ResampleBinPath)
-           #ResampleBinPath =  os.path.join(*ResampleBinPath.split(","))            
-           resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath   
+           try:
+               resamplingCommand = slicer.modules.resamplescalarvolume.path
+           except AttributeError:
+               #TODO: Get Slicer PATH
+               SlicerPath      =os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
+               SlicerBinPath   = os.path.join(SlicerPath,"Slicer")
+               ResampleBinPath =  os.path.join( (glob.glob(os.path.join(SlicerPath,"lib","Slicer") + '*'))[0]    , "cli-modules","ResampleScalarVolume" )
+               if sys.platform == 'win32':
+                   ResampleBinPath + ".exe"
+                   resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
+               else:
+                   #note: in windows, no need to use --launch
+                   resamplingCommand = ResampleBinPath + ".exe"
+           #endtry
+           print(resamplingCommand)
            si = None 
            currentOS = sys.platform           
            cmdPars = " -i linear -s "+ resampleSpacing + inputCropPath +" "+inputCropIsoPath  
            Cmd = resamplingCommand  + cmdPars
-           
            if sys.platform == 'win32':
               #note: in windows, no need to use --launch
               SlicerBinPath = SlicerBinPath +".exe"
@@ -715,15 +723,19 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endfor fd
       vissimPath = self.vtVars['vissimPath']
       cropfiles = os.listdir(vissimPath) 
-      for fnm in cropfiles:
-          if "Crop" in fnm:
-              os.remove(os.path.join(vissimPath, fnm))
-          #endif
-          if re.search('[C][1-7]', fnm):
-              os.remove(os.path.join(vissimPath, fnm))
-          #endif
-
-      #endfor  
+      try:  
+         for fnm in cropfiles:
+             if "Crop" in fnm:
+                 os.remove(os.path.join(vissimPath, fnm))
+             #endif
+             if re.search('[C][1-7]', fnm):
+                 os.remove(os.path.join(vissimPath, fnm))
+             #endif
+         #endfor
+      except Exception as e:
+             print(" Error: can not remove " + fnm)
+             print(e)   
+      #endtry  
       nodes = slicer.util.getNodesByClass('vtkMRMLScalarVolumeNode')
       for f in nodes:
           if "_Crop"  in f.GetName(): slicer.mrmlScene.RemoveNode(f)
@@ -1153,4 +1165,5 @@ class VisSimCommonTest(ScriptedLoadableModuleLogic):
   def runTest(self):
     self.setUp()
     print(VisSimCommonLogic().tstSum(10,20))
-  #enddef 
+  #enddef
+#enclass 

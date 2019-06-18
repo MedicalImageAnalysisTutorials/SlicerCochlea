@@ -19,7 +19,7 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  SLicer 4.10
-#  Updated: 16.6.2019                                                                 #    
+#  Updated: 18.6.2019                                                                 #    
 #-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
@@ -41,6 +41,7 @@ from os.path import isfile
 from os.path import basename
 from PythonQt import BoolResult
 from shutil import copyfile
+import SampleData
 
 import VisSimCommon
 
@@ -373,64 +374,63 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
   
   def runTest(self):
       self.setUp()
-
-      self.vsc   = VisSimCommon.VisSimCommonLogic()   
-      self.vsc.vtVars = self.vsc.setGlobalVariables(0)
-
-      fixedImgPath  = os.path.join(self.vsc.vtVars['vissimPath'],"imgFixed.nrrd")
-      movingImgPath = os.path.join(self.vsc.vtVars['vissimPath'],"imgMoving.nrrd")
-
-      fixedPoint  = [220,242,78]
-      movingPoint = [196,217,93]
-
-      fixedImgWebLink  = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
-      movingImgWebLink = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
-
-      # don't download if already downloaded                       
-      if not os.path.exists(fixedImgPath):
-         try:         
-             print("Downloading cochlea sample image ...")
-             urllib.urlretrieve (fixedImgWebLink ,fixedImgPath )
-         except Exception as e:
-             print("Error: can not download fixed image sample file  ...")
-             print(e)   
-             return -1
-         #end try-except 
-      #endif
-      if not os.path.exists(movingImgPath):
-         try:         
-             print("Downloading cochlea sample image ...")
-             urllib.urlretrieve (movingImgWebLink ,movingImgPath )
-         except Exception as e:
-             print("Error: can not download moving image sample file  ...")
-             print(e)   
-             return -1
-         #end try-except 
-      #endif
-
-      self.testSlicerCochleaRegistration(fixedImgPath , fixedPoint, movingImgPath, movingPoint)
-
+      self.testSlicerCochleaRegistration()
   #enddef
 
-  def testSlicerCochleaRegistration(self, fixedImgPath , fixedPoint, movingImgPath, movingPoint):
+  def runTest(self):
+      self.setUp()
+      self.testSlicerCochleaRegistration()
+  #enddef
+
+  def testSlicerCochleaRegistration(self, fixedImgPath=None, fixedPoint=None, movingImgPath=None, movingPoint=None):
 
       self.delayDisplay("Starting testSlicerCochleaRegistration test")
       self.stm=time.time()
 
-
+      if fixedPoint is None:
+          fixedPoint = [220,242,78]
+      #endif
+      if movingPoint is None:
+          movingPoint = [196,217,93]
+      #endif 
+      nodeNames='P100001_DV_L_a'
+      nodeNames='P100001_DV_L_a'
+      fileNames='P100001_DV_L_a.nrrd'
+      uris='https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download'
+      checksums='SHA256:d7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5'
+      if fixedImgPath is None:
+         tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
+         fixedImgPath  =  os.path.join(slicer.mrmlScene.GetCacheManager().GetRemoteCacheDirectory(),fileNames)
+         slicer.mrmlScene.RemoveNode(tmpVolumeNode)
+      else:
+         nodeNames = os.path.splitext(os.path.basename(fixedImgPath))[0]
+      #endif 
+      [success, fixedVolumeNode]  = slicer.util.loadVolume(fixedImgPath, returnNode=True)
+      fixedVolumeNode.SetName(nodeNames)
+      #endifelse
+      nodeNames='P100001_DV_L_b'
+      fileNames='P100001_DV_L_b.nrrd'
+      uris='https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download'
+      checksums='SHA256:9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5'
+      if movingImgPath is None:
+         tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
+         movingImgPath  =  os.path.join(slicer.mrmlScene.GetCacheManager().GetRemoteCacheDirectory(),fileNames)
+         slicer.mrmlScene.RemoveNode(tmpVolumeNode)
+      else:
+         nodeNames = os.path.splitext(os.path.basename(movingImgPath))[0]
+      #endif 
+      [success, movingVolumeNode] = slicer.util.loadVolume(movingImgPath, returnNode=True)
+      movingVolumeNode.SetName(nodeNames)
+      #endifelse 
       self.logic = CochleaRegLogic()
       self.vsc   = VisSimCommon.VisSimCommonLogic()   
-
       #setGlobal variables. 
       self.vsc.vtVars = self.vsc.setGlobalVariables(0)
 
       # remove contents of output folder
       self.vsc.removeOtputsFolderContents()
 
-      # record duration of the test    
-
-      [success, fixedVolumeNode]  = slicer.util.loadVolume( fixedImgPath, returnNode=True)
-      [success, movingVolumeNode] = slicer.util.loadVolume( movingImgPath, returnNode=True)
+      # record duration of the test
     
       # create a fiducial node for cochlea locations for cropping    
       fixedPointRAS = self.vsc.ptIJK2RAS(fixedPoint , fixedVolumeNode) 
@@ -462,6 +462,5 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       tm=self.etm - self.stm
       print("Time: "+str(tm)+"  seconds")
       self.delayDisplay('Test testSlicerCochleaRegistration passed!')
-
-  #enddef
-            
+  #enddef          
+#endclass
