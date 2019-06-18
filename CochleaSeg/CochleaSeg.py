@@ -20,12 +20,14 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.11.0                                                                      #
-#  Updated: 12.6.2019                                                                 # #-------------------------------------------------------------------------------------#
+#  Updated: 18.6.2019                                                                 #
+#-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
 #  - Use transformation directly to transform the points.                             #
 #  - Add more support for windows and mac.                                            #   
 #  - Logic functions are independent and can be called from external script.          #
+#  - test function can be used in external scripts. A demo example is provided        #
 #======================================================================================
 
 import os, re , datetime, time ,shutil, unittest, logging, zipfile,urllib.request ,  stat,  inspect
@@ -41,6 +43,7 @@ from os.path import isfile
 from os.path import basename
 from PythonQt import BoolResult
 from shutil import copyfile
+import SampleData
 
 import VisSimCommon
 
@@ -51,8 +54,9 @@ import VisSimCommon
 #      with error : Failed to get reference image geometry 
 #    - the problem above solved by exporting to label with model as reference then export to .seg.
 #      but still we have bad results. More testing is needed.    
-# 2. remove temp nodes and files  
-# 2. update links for models and sample images
+# 2. cleaning, removing temp nodes and files  
+# 3. add alternative links for models and sample images.
+# 4. local testing with different machines. 
 
 # Later:
 # - Checking if all above are needed 
@@ -60,7 +64,7 @@ import VisSimCommon
 # - Testing in both Windows and Linux. 
 # - Supporting DICOM. 
 # - Supporting illegal filename.  
-# - Using  SlierElastix binaries.   
+# - Add alternative to use elastix binaries directly by downloading the binary release.   
 # - Visualizing the interimediate steps. 
 # 
 #  
@@ -423,70 +427,64 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
 
   def runTest(self):
       self.setUp()
-
-      self.vsc   = VisSimCommon.VisSimCommonLogic()   
-      self.vsc.vtVars = self.vsc.setGlobalVariables(0)
-
-      cochleaSide  = "R"
-      beforORafter ="_b" # _a= before, _b=after     
-      imgPath = os.path.join(self.vsc.vtVars['vissimPath'],"img"+cochleaSide+beforORafter+".nrrd")
-
-      # don't download if already downloaded                       
-      if (beforORafter=="_b" and cochleaSide=="L"):        
-         cochleaPoint = [195,218,95]
-         imgWebLink = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
-      elif(beforORafter=="_a" and cochleaSide=="L"):
-         cochleaPoint = [214,242,78]
-         imgWebLink = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
-      elif(beforORafter=="_b" and cochleaSide=="R"):
-         cochleaPoint = [194,216,93]
-         imgWebLink = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
-      elif(beforORafter=="_a" and cochleaSide=="R"):
-         cochleaPoint = [296,208,76]
-         imgWebLink = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
-      else:
-          print("error in cochlea side or before after type")
-      #endif  
-      if not os.path.exists(imgPath):
-         try:         
-             print("Downloading cochlea sample image ...")
-             urllib.request.urlretrieve (imgWebLink ,imgPath )
-         except Exception as e:
-             print("Error: can not download sample file  ...")
-             print(e)   
-             return -1
-         #end try-except 
-      #endif
-
-      self.testSlicerCochleaSegmentation(imgPath , cochleaPoint, cochleaSide)
-
+      self.testSlicerCochleaSegmentation()
   #enddef
 
-  def testSlicerCochleaSegmentation(self, imgPath,cochleaPoint, cochleaSide):
+  def testSlicerCochleaSegmentation(self, imgPath=None, cochleaPoint=None, cochleaSide=None):
+
       self.delayDisplay("Starting testSlicerCochleaSegmentation test")
       self.stm=time.time()
 
-      self.logic = CochleaSegLogic()
       self.vsc   = VisSimCommon.VisSimCommonLogic()   
-
-      #setGlobal variables. 
       self.vsc.vtVars = self.vsc.setGlobalVariables(0)
-
+      self.logic = CochleaSegLogic()
       # remove contents of output folder
       self.vsc.removeOtputsFolderContents()
-      # record duration of the test    
 
-      # to get the links from datastore open http://slicer.kitware.com/midas3/community/23 then select a file and click share to get
-      # the download link
-      # TODO: fix datastore link download problem, the file is created before downloaded   
-      #   imgLaWeb = "http://slicer.kitware.com/midas3/download/item/381221/P100001_DV_L_a"
+      if cochleaSide is None:
+         cochleaSide  = "R"
+         beforORafter ="_a" # _a= before, _b=after     
+         if ( cochleaSide=="L" and beforORafter=="_b" ):        
+             cochleaPoint = [195,218,95]
+             uris         = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
+             fileNames    = 'P100001_DV_L_b.nrrd'
+             nodeNames    = 'P100001_DV_L_b'
+             checksums    = '9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5'
+         elif(cochleaSide=="L" and beforORafter=="_a"  ):
+             cochleaPoint = [214,242,78]
+             uris         = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
+             fileNames    = 'P100001_DV_L_a.nrrd'
+             nodeNames    = 'P100001_DV_L_a'
+             checksums    = 'd7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5'
+         elif(cochleaSide=="R" and beforORafter=="_b" ):
+             cochleaPoint = [194,216,93]
+             imgWebLink   = "https://cloud.uni-koblenz-landau.de/s/4K5gAwisgqSHK4j/download"
+             fileNames    = 'P100003_DV_R_b.nrrd' 
+             nodeNames    = 'P100003_DV_R_b'
+             checksums    = '4478778377982b6789ddf8f5ccd20f66757d6733853cce3f89faf75df2fa4faa'
+         elif(cochleaSide=="R" and beforORafter=="_a" ):
+             cochleaPoint = [294,250,60]
+             uris         = "https://cloud.uni-koblenz-landau.de/s/WAxHyqLC3JsKY2x/download"
+             fileNames    = 'P100003_DV_R_a.nrrd'
+             nodeNames    = 'P100003_DV_R_a'
+             checksums    = 'c62d37e13596eafc8550f488006995d811c8d6503445d5324810248a3c3b6f89'
+         else:
+             print("error in cochlea side or before after type")
+             return -1
+      #endif  
+      #sampledata loads the volume as well but didn't provide storage node.
+      if imgPath is None: 
+         tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
+         imgPath       =  os.path.join(slicer.mrmlScene.GetCacheManager().GetRemoteCacheDirectory(),fileNames)
+         slicer.mrmlScene.RemoveNode(tmpVolumeNode)
+      else:
+         nodeNames = os.path.splitext(os.path.basename(imgPath))[0]
+      #endif 
+      [success, inputVolumeNode]  = slicer.util.loadVolume(imgPath, returnNode=True)
+      inputVolumeNode.SetName(nodeNames)
 
-      [success, inputVolumeNode] = slicer.util.loadVolume( imgPath, returnNode=True)
-    
       # create a fiducial node for cochlea location for cropping    
       cochleaPointRAS = self.vsc.ptIJK2RAS(cochleaPoint,inputVolumeNode) 
-      print(cochleaPoint)
-      print(cochleaPointRAS)
       inputFiducialNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode")
       inputFiducialNode.CreateDefaultDisplayNodes()
       inputFiducialNode.SetName("cochleaLocationPoint")  

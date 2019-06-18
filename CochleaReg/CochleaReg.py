@@ -19,7 +19,7 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.11.0                                                                      #
-#  Updated: 12.6.2019                                                                 # #-------------------------------------------------------------------------------------#
+#  Updated: 18.6.2019                                                                 # #-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
 #  - Use transformation directly to transform the points.                             #
@@ -352,6 +352,7 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       #remove the tempnode and load the original
       slicer.mrmlScene.RemoveNode(movingVolumeNode); 
       [success, movingVolumeNode] = slicer.util.loadVolume(movingPath, returnNode = True)
+      movingVolumeNode.SetName(os.path.splitext(os.path.basename(movingVolumeNode.GetStorageNode().GetFileName()))[0])
       if  (cTI==0) and (cTR==0):
           print("No error is reported during registeration ...")
       else:
@@ -386,31 +387,41 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
 
       if fixedPoint is None:
           fixedPoint = [220,242,78]
-
+      #endif
       if movingPoint is None:
           movingPoint = [196,217,93]
-
+      #endif 
+      nodeNames='P100001_DV_L_a'
+      nodeNames='P100001_DV_L_a'
+      fileNames='P100001_DV_L_a.nrrd'
+      uris='https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download'
+      checksums='SHA256:d7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5'
       if fixedImgPath is None:
-          fixedVolumeNode = SampleData.downloadFromURL(
-              nodeNames='P100001_DV_L_a',
-              fileNames='P100001_DV_L_a.nrrd',
-              uris='https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download',
-              checksums='SHA256:d7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5')[0]
+         tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
+         fixedImgPath  =  os.path.join(slicer.mrmlScene.GetCacheManager().GetRemoteCacheDirectory(),fileNames)
+         slicer.mrmlScene.RemoveNode(tmpVolumeNode)
       else:
-          [success, fixedVolumeNode]  = slicer.util.loadVolume(fixedImgPath, returnNode=True)
-
+         nodeNames = os.path.splitext(os.path.basename(fixedImgPath))[0]
+      #endif 
+      [success, fixedVolumeNode]  = slicer.util.loadVolume(fixedImgPath, returnNode=True)
+      fixedVolumeNode.SetName(nodeNames)
+      #endifelse
+      nodeNames='P100001_DV_L_b'
+      fileNames='P100001_DV_L_b.nrrd'
+      uris='https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download'
+      checksums='SHA256:9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5'
       if movingImgPath is None:
-          movingVolumeNode = SampleData.downloadFromURL(
-              nodeNames='P100001_DV_L_b',
-              fileNames='P100001_DV_L_b.nrrd',
-              uris='https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download',
-              checksums='SHA256:9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5')[0]
+         tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
+         movingImgPath  =  os.path.join(slicer.mrmlScene.GetCacheManager().GetRemoteCacheDirectory(),fileNames)
+         slicer.mrmlScene.RemoveNode(tmpVolumeNode)
       else:
-          [success, movingVolumeNode] = slicer.util.loadVolume(movingImgPath, returnNode=True)
-
+         nodeNames = os.path.splitext(os.path.basename(movingImgPath))[0]
+      #endif 
+      [success, movingVolumeNode] = slicer.util.loadVolume(movingImgPath, returnNode=True)
+      movingVolumeNode.SetName(nodeNames)
+      #endifelse 
       self.logic = CochleaRegLogic()
       self.vsc   = VisSimCommon.VisSimCommonLogic()   
-
       #setGlobal variables. 
       self.vsc.vtVars = self.vsc.setGlobalVariables(0)
 
@@ -450,5 +461,4 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       print("Time: "+str(tm)+"  seconds")
       self.delayDisplay('Test testSlicerCochleaRegistration passed!')
 
-  #enddef
-            
+  #enddef          
