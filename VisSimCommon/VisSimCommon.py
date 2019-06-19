@@ -21,7 +21,7 @@
 #       slicer.util.reloadScriptedModule(self.moduleName)    
 #======================================================================================
 import os, re , datetime, time ,shutil, unittest, logging, zipfile,  stat,  inspect
-import sitkUtils, sys ,math, platform  , glob,subprocess, urllib, urllib2
+import sitkUtils, sys ,math, platform  , glob,subprocess, urllib, urllib2, hashlib
 import numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
 from __main__ import vtk, qt, ctk, slicer
@@ -174,30 +174,35 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
           #TODO: download elastix binaries as additional option
           return -1
       #endif
+      cochleaSHA256      ='b4887a7384a2e5a74cd79bc4179f0b85349e3f5bafff9e284ebaf6675d2b6322'
+      cervicalSpineSHA256='6dc3e4e019910485f183d448f328197ca4e958f6dab2c56c964281d84f823315'
       othersWebLink =  ""      
       if vsExtension ==0: # cochlea
          # TODO: optimise this part to download only the missing files        
-         # Check if elastix exist or download it 
          print("      Cochlea Extension is selected")            
          # check if other files exist
          if  os.path.exists(vtVars['modelPath']): 
-            print("      Other files are found !" )
-            print("      Parameter file: "  + vtVars['parsPath'])
-            print("      Cropping Length: " + vtVars['croppingLength'] )
-         else:
-            othersWebLink = vtVars['othersWebLink']      
-                           
+             print("      Other files are found !" )
+             if self.chkSHA256Sum(vtVars['modelPath'], cochleaSHA256):  
+                print("      Parameter file: "  + vtVars['parsPath'])
+                print("      Cropping Length: " + vtVars['croppingLength'] )
+             else:
+               othersWebLink = vtVars['othersWebLink']      
+             #endif
          #endif
       elif vsExtension ==1: # Spine
          # TODO: optimise this part to download only the missing files        
          # Check if elastix exist or download it 
          print("      Spine Extension is selected")            
+         # check if other files exist
          if  os.path.exists(vtVars['modelPath']): 
-            print("      Other files are found !" )
-            print("      Parameter file: "  + vtVars['parsPath'])
-            print("      Cropping Length: " + vtVars['croppingLength'] )
-         else:
-            othersWebLink = vtVars['othersWebLink']      
+             print("      Other files are found !" )
+             if self.chkSHA256Sum(vtVars['modelPath'], cervicalSpineSHA256):  
+                print("      Parameter file: "  + vtVars['parsPath'])
+                print("      Cropping Length: " + vtVars['croppingLength'] )
+             else:
+               othersWebLink = vtVars['othersWebLink']      
+             #endif
          #endif
       #endif  
       if not othersWebLink=="":
@@ -217,10 +222,36 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 print("      Error: can not download and extract VisSimTools ...")
                 print(e)   
                 return -1
-       #end try-except  
-      
+       #end try-except        
   #enddef
-    
+  def chkSHA256Sum(self, folderPath, sha256Sum):  
+      # zip the folder temporary, compute the checksum then remove the zipped file
+     zipFileName = os.path.join(os.path.abspath(os.path.join(folderPath, os.pardir)) ,'tst.zip')
+     print(zipFileName)
+     zipf = zipfile.ZipFile(zipFileName, 'w', zipfile.ZIP_DEFLATED)
+     # ziph is zipfile handle
+     for root, dirs, files in os.walk(folderPath):
+        for file in files:
+            fnm =  os.path.join(root, file)
+            print(fnm)
+            zipf.write(fnm)
+     zipf.close()
+     sha256_hash = hashlib.sha256()
+     with open(zipFileName,"rb") as f:
+         # Read and update hash string value in blocks of 4K
+         for byte_block in iter(lambda: f.read(4096),b""):
+             sha256_hash.update(byte_block)
+         #endfor   
+         sha256computedCheckSum = sha256_hash.hexdigest()
+         updatedModel = False 
+         if sha256computedCheckSum == sha256Sum:
+            updatedModel = True
+         #endif 
+     #endwith
+     os.remove(zipFileName)
+     return updatedModel 
+  #enddef
+     
   # string to boolean converter
   def s2b(self,s):
         return s.lower() in ("yes", "true", "t", "1")
