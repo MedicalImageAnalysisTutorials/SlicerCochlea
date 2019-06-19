@@ -8,7 +8,7 @@
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.10
-#  Updated: 18.6.2019                                                                 # #-------------------------------------------------------------------------------------#
+#  Updated: 19.6.2019                                                                 # #-------------------------------------------------------------------------------------#
 # this file can be updated andreload automatically when call dependant module by      # 
 # modifing bin/python/slicer/ScriptedLoadableModule.py                                #
 #    def onReload(self):
@@ -109,7 +109,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       slicer.mrmlScene.AddDefaultNode(msn)
 
       if vsExtension == 0: #0=cochlea
-         self.vtVars['othersWebLink']  =  ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")   
+         self.vtVars['othersUniKoWebLink']  =  ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")  
+         self.vtVars['othersWebLink']       =  ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
          parsPath                            = self.vtVars['vissimPath']  + ",pars,parCochSeg.txt" 
          self.vtVars['parsPath']             = os.path.join(*parsPath.split(","))
          modelPath                           = self.vtVars['vissimPath']  + ",models,modelCochlea" 
@@ -126,7 +127,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #Only for Cervical Spine      
       elif vsExtension == 1: # Cervical Spine       
          print("VisSimCommonLogic: initializing global variables:")  
-         self.vtVars['othersWebLink']        = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
+         self.vtVars['othersUniKoWebLink']   = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
+         self.vtVars['othersWebLink']        = "https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
          parsPath                            = self.vtVars['vissimPath']  + ",pars,parSpiSeg.txt" 
          self.vtVars['parsPath']             = os.path.join(*parsPath.split(","))
          modelPath                           = self.vtVars['vissimPath']  + ",models,modelCervicalSpine" 

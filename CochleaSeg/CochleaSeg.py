@@ -20,7 +20,7 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  SLicer 4.10
-#  Updated: 18.6.2019                                                                 #    
+#  Updated: 19.6.2019                                                                 #    
 #-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
@@ -437,31 +437,38 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
       self.logic = CochleaSegLogic()
       # remove contents of output folder
       self.vsc.removeOtputsFolderContents()
-
+      #TODO: error handling to select the download link
       if cochleaSide is None:
-         cochleaSide  = "R"
-         beforORafter ="_a" # _a= before, _b=after     
+         cochleaSide  = "L"  ;    beforORafter ="_b" # _a= before, _b=after     
          if ( cochleaSide=="L" and beforORafter=="_b" ):        
              cochleaPoint = [195,218,95]
-             uris         = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
+             urisUniKo    = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
+             urisGitHub   = 'https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/P100001_DV_L_b.nrrd'
+             uris = urisGitHub          
              fileNames    = 'P100001_DV_L_b.nrrd'
              nodeNames    = 'P100001_DV_L_b'
              checksums    = '9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5'
          elif(cochleaSide=="L" and beforORafter=="_a"  ):
              cochleaPoint = [214,242,78]
-             uris         = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
+             urisUniKo         = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
+             urisGitHub   = 'https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/P100001_DV_L_a.nrrd'
+             uris = urisGitHub          
              fileNames    = 'P100001_DV_L_a.nrrd'
              nodeNames    = 'P100001_DV_L_a'
              checksums    = 'd7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5'
          elif(cochleaSide=="R" and beforORafter=="_b" ):
              cochleaPoint = [194,216,93]
-             imgWebLink   = "https://cloud.uni-koblenz-landau.de/s/4K5gAwisgqSHK4j/download"
+             urisUniKo   = "https://cloud.uni-koblenz-landau.de/s/4K5gAwisgqSHK4j/download"
+             urisGitHub   = 'https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/P100003_DV_R_b.nrrd'
+             uris = urisGitHub          
              fileNames    = 'P100003_DV_R_b.nrrd' 
              nodeNames    = 'P100003_DV_R_b'
              checksums    = '4478778377982b6789ddf8f5ccd20f66757d6733853cce3f89faf75df2fa4faa'
          elif(cochleaSide=="R" and beforORafter=="_a" ):
              cochleaPoint = [294,250,60]
-             uris         = "https://cloud.uni-koblenz-landau.de/s/WAxHyqLC3JsKY2x/download"
+             urisUniKo    = "https://cloud.uni-koblenz-landau.de/s/WAxHyqLC3JsKY2x/download"
+             urisGitHub   = 'https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/P100003_DV_R_a.nrrd'
+             uris = urisGitHub          
              fileNames    = 'P100003_DV_R_a.nrrd'
              nodeNames    = 'P100003_DV_R_a'
              checksums    = 'c62d37e13596eafc8550f488006995d811c8d6503445d5324810248a3c3b6f89'
@@ -471,9 +478,15 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
       #endif  
       #sampledata loads the volume as well but didn't provide storage node.
       if imgPath is None: 
-         tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
-         imgPath       =  os.path.join(slicer.mrmlScene.GetCacheManager().GetRemoteCacheDirectory(),fileNames)
-         slicer.mrmlScene.RemoveNode(tmpVolumeNode)
+         try:
+            tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
+            imgPath       =  os.path.join(slicer.mrmlScene.GetCacheManager().GetRemoteCacheDirectory(),fileNames)
+            slicer.mrmlScene.RemoveNode(tmpVolumeNode)
+         except Exception as e:
+            print("Error: can not download sample data")
+            print (e)
+            return -1 
+         #endtry
       else:
          nodeNames = os.path.splitext(os.path.basename(imgPath))[0]
       #endif 
