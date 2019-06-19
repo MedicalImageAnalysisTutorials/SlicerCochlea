@@ -19,7 +19,7 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.11.0                                                                      #
-#  Updated: 18.6.2019                                                                 # #-------------------------------------------------------------------------------------#
+#  Updated: 19.6.2019                                                                 # #-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
 #  - Use transformation directly to transform the points.                             #
@@ -394,7 +394,9 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       nodeNames='P100001_DV_L_a'
       nodeNames='P100001_DV_L_a'
       fileNames='P100001_DV_L_a.nrrd'
-      uris='https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download'
+      urisUniKo         = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
+      urisGitHub   = 'https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/P100001_DV_L_a.nrrd'
+      uris = urisGitHub          
       checksums='SHA256:d7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5'
       if fixedImgPath is None:
          tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
@@ -408,7 +410,9 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       #endifelse
       nodeNames='P100001_DV_L_b'
       fileNames='P100001_DV_L_b.nrrd'
-      uris='https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download'
+      urisUniKo    = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
+      urisGitHub   = 'https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/P100001_DV_L_b.nrrd'
+      uris = urisGitHub          
       checksums='SHA256:9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5'
       if movingImgPath is None:
          tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
@@ -460,5 +464,5 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       tm=self.etm - self.stm
       print("Time: "+str(tm)+"  seconds")
       self.delayDisplay('Test testSlicerCochleaRegistration passed!')
-
   #enddef          
+#endclass

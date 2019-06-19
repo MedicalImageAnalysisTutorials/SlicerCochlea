@@ -8,10 +8,11 @@
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.11.0                                                                      #
-#  Updated: 18.6.2019                                                                 # 
-#TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide
+#  Updated: 19.6.2019                                                                 # 
 #-------------------------------------------------------------------------------------#
-                                                                                     #
+#TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
+#-------------------------------------------------------------------------------------#
+                                                                                      #
 # this file can be updated andreload automatically when call dependant module by      # 
 # modifing bin/python/slicer/ScriptedLoadableModule.py                                #
 #    def onReload(self):
@@ -116,7 +117,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       slicer.mrmlScene.AddDefaultNode(msn)
 
       if vsExtension == 0: #0=cochlea
-         self.vtVars['othersWebLink']  =  ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")   
+         self.vtVars['othersUniKoWebLink']  =  ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")  
+         self.vtVars['othersWebLink']       =  ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
          parsPath                            = self.vtVars['vissimPath']  + ",pars,parCochSeg.txt" 
          self.vtVars['parsPath']             = os.path.join(*parsPath.split(","))
          modelPath                           = self.vtVars['vissimPath']  + ",models,modelCochlea" 
@@ -133,7 +135,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #Only for Cervical Spine      
       elif vsExtension == 1: # Cervical Spine       
          print("VisSimCommonLogic: initializing global variables:")  
-         self.vtVars['othersWebLink']        = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
+         self.vtVars['othersUniKoWebLink']   = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
+         self.vtVars['othersWebLink']        = "https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
          parsPath                            = self.vtVars['vissimPath']  + ",pars,parSpiSeg.txt" 
          self.vtVars['parsPath']             = os.path.join(*parsPath.split(","))
          modelPath                           = self.vtVars['vissimPath']  + ",models,modelCervicalSpine" 
@@ -481,7 +484,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                    ResampleBinPath + ".exe"
                    resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
                else:
-                   #note: in windows, no need to use --launch
+                   #note: in winedows, no need to use --launch
                    resamplingCommand = ResampleBinPath + ".exe"
            #endtry
            print(resamplingCommand)
@@ -739,9 +742,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
              print(" Error: can not remove " + fnm)
              print(e)   
       #endtry  
-
-
-      #endtry     
       nodes = slicer.util.getNodesByClass('vtkMRMLScalarVolumeNode')
       for f in nodes:
           if "_Crop"  in f.GetName(): slicer.mrmlScene.RemoveNode(f)
@@ -1166,3 +1166,4 @@ class VisSimCommonTest(ScriptedLoadableModuleLogic):
     self.setUp()
     print(VisSimCommonLogic().tstSum(10,20))
   #enddef 
+#endclass
