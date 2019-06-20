@@ -7,8 +7,9 @@
 #  [1] https://www.slicer.org                                                         #
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.10
-#  Updated: 20.6.2019                                                                 # #-------------------------------------------------------------------------------------#
+#  Slicer 4.10                                                                        # 
+#  Updated: 20.6.2019                                                                 #
+#-------------------------------------------------------------------------------------#
 # this file can be updated andreload automatically when call dependant module by      # 
 # modifing bin/python/slicer/ScriptedLoadableModule.py                                #
 #    def onReload(self):
@@ -110,12 +111,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       if vsExtension == 0: #0=cochlea
          self.vtVars['othersUniKoWebLink']  = ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")  
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
-         self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
          self.OthersSHA256                  = '763be6b5b11f0f6a3ed73d1a5ef5df34cdbbf46a3e1728195e79e8dcd26313d1' 
-         parsPath                           = self.vtVars['vissimPath']  + ",pars,parCochSeg.txt" 
-         self.vtVars['parsPath']            = os.path.join(*parsPath.split(","))
-         modelPath                          = self.vtVars['vissimPath']  + ",models,modelCochlea" 
-         self.vtVars['modelPath']           = os.path.join(*modelPath.split(","))            
+         self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath']  , "pars","parCochSeg.txt")
+         self.vtVars['modelPath']           = os.path.join(self.vtVars['vissimPath'], "models","modelCochlea")            
          self.vtVars['downSz']              = "500"
          self.vtVars['inputPoint']          = "[0,0,0]" # initial poisition = no position               
          self.vtVars['croppingLength']      = "[ 10 , 10 , 10 ]"   #Cropping Parameters
@@ -134,10 +132,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['othersUniKoWebLink']   = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
          self.vtVars['othersWebLink']        = "https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
          self.OthersSHA256                   = 'fbcd25344b649cb3055674ff740be305f0c975781726c353ef11566be1b545c0'          
-         parsPath                            = self.vtVars['vissimPath']  + ",pars,parSpiSeg.txt" 
-         self.vtVars['parsPath']             = os.path.join(*parsPath.split(","))
-         modelPath                           = self.vtVars['vissimPath']  + ",models,modelCervicalSpine" 
-         self.vtVars['modelPath']            = os.path.join(*modelPath.split(","))
+         self.vtVars['parsPath']             = os.path.join(self.vtVars['vissimPath']  , "pars","parSpiSeg.txt" )
+         self.vtVars['modelPath']            = os.path.join(self.vtVars['vissimPath']  , "models","modelCervicalSpine" )
          self.vtVars['vtID']                 = "7"
          vtMethodsegT= [",Default"]
          vtMethodsgT = ["S.seg" ]
