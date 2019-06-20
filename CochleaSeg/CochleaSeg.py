@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 #======================================================================================
 #  3D Slicer [1] plugin that uses elastix toolbox [2] Plugin for Automatic Cochlea    # 
 #  Image Segmentation [3]. More info can be found at [4].                             #
@@ -20,7 +20,7 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  SLicer 4.10
-#  Updated: 19.6.2019                                                                 #    
+#  Updated: 20.6.2019                                                                 #    
 #-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
@@ -108,6 +108,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
     print("=======================================================")   
     print("   Automatic Cochlea Image Segmentation               ")
     print("=======================================================")           
+    #slicer.util.reloadScriptedModule("VisSimCommon")
     ScriptedLoadableModuleWidget.setup(self)
     
     # to access logic class functions and setup global variables
