@@ -505,9 +505,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                #note: in windows, no need to use --launch
                resamplingCommand = ResampleBinPath + ".exe"
            #endtry
-           #C:/Program Files/Slicer 4.10.2/bin/../lib/Slicer-4.10/cli-modules/ResampleScalarVolume.exe
-           #C:\Program Files\Slicer 4.10.2\lib\Slicer-4.10\cli-modules\ResampleScalarVolume
-
            print(resamplingCommand)
            si = None 
            currentOS = sys.platform           
