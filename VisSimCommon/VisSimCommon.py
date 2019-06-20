@@ -8,7 +8,7 @@
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.11.0                                                                      #
-#  Updated: 19.6.2019                                                                 # 
+#  Updated: 20.6.2019                                                                 # 
 #-------------------------------------------------------------------------------------#
 #TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
 #-------------------------------------------------------------------------------------#
@@ -86,7 +86,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       return x+y
   #enddef
  
-
   # vsExtension = 0: Cochlea, vsExtension = 1: Spine
   def setGlobalVariables(self,vsExtension):
       # define global variables as a dictonary
@@ -117,26 +116,32 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       slicer.mrmlScene.AddDefaultNode(msn)
 
       if vsExtension == 0: #0=cochlea
-         self.vtVars['othersUniKoWebLink']  =  ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")  
-         self.vtVars['othersWebLink']       =  ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
-         parsPath                            = self.vtVars['vissimPath']  + ",pars,parCochSeg.txt" 
-         self.vtVars['parsPath']             = os.path.join(*parsPath.split(","))
-         modelPath                           = self.vtVars['vissimPath']  + ",models,modelCochlea" 
-         self.vtVars['modelPath']            = os.path.join(*modelPath.split(","))            
-         self.vtVars['downSz']               = "500"
-         self.vtVars['inputPoint']           = "[0,0,0]" # initial poisition = no position               
-         self.vtVars['croppingLength']       = "[ 10 , 10 , 10 ]"   #Cropping Parameters
-         self.vtVars['RSxyz']                = "[ 0.125, 0.125 , 0.125 ]"  #Resampling parameters 
-         self.vtVars['dispViewTxt']          = "Green"
-         self.vtVars['cochleaSide']          = "L" # default cochlea side is left
-         self.vtVars['StLength']             = "0" # initial scala tympani length
-         self.vtVars['dispViewTxt']          = "Green"
-         self.vtVars['dispViewID']           = "8" #Green, coronal view 
+         self.vtVars['othersUniKoWebLink']  = ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")  
+         self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
+         self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
+         self.OthersSHA256                  = 'b4887a7384a2e5a74cd79bc4179f0b85349e3f5bafff9e284ebaf6675d2b6322' 
+         parsPath                           = self.vtVars['vissimPath']  + ",pars,parCochSeg.txt" 
+         self.vtVars['parsPath']            = os.path.join(*parsPath.split(","))
+         modelPath                          = self.vtVars['vissimPath']  + ",models,modelCochlea" 
+         self.vtVars['modelPath']           = os.path.join(*modelPath.split(","))            
+         self.vtVars['downSz']              = "500"
+         self.vtVars['inputPoint']          = "[0,0,0]" # initial poisition = no position               
+         self.vtVars['croppingLength']      = "[ 10 , 10 , 10 ]"   #Cropping Parameters
+         self.vtVars['RSxyz']               = "[ 0.125, 0.125 , 0.125 ]"  #Resampling parameters 
+         self.vtVars['dispViewTxt']         = "Green"
+         self.vtVars['cochleaSide']         = "L" # default cochlea side is left
+         self.vtVars['StLength']            = "0" # initial scala tympani length
+         self.vtVars['dispViewTxt']         = "Green"
+         self.vtVars['dispViewID']          = "8" #Green, coronal view 
+         if (sys.platform == 'win32') or (platform.system()=='Windows'):
+           self.OthersSHA256                = 'd4c6c859b712e963cd7c115413d50e314092d3beae1cede5225fc7552d02804a'
+        #endif   
       #Only for Cervical Spine      
       elif vsExtension == 1: # Cervical Spine       
          print("VisSimCommonLogic: initializing global variables:")  
          self.vtVars['othersUniKoWebLink']   = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
          self.vtVars['othersWebLink']        = "https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
+         self.OthersSHA256                   = '6dc3e4e019910485f183d448f328197ca4e958f6dab2c56c964281d84f823315'          
          parsPath                            = self.vtVars['vissimPath']  + ",pars,parSpiSeg.txt" 
          self.vtVars['parsPath']             = os.path.join(*parsPath.split(","))
          modelPath                           = self.vtVars['vissimPath']  + ",models,modelCervicalSpine" 
@@ -162,7 +167,10 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['segNodeCoM']           = "[ 0 , 0 , 0 ]"
          self.vtVars['croppingLength']       = "[ 80 , 80 , 50 ]"
          self.vtVars['RSxyz']                = "[ 0.5, 0.5 , 0.5 ]"
-         #endif             
+         if (sys.platform == 'win32') or (platform.system()=='Windows'):
+           self.OthersSHA256                 = '9a2ee6a67a190e438a18be811310cbf4eb26b6ad3e00243affa44cc0b26c4393' 
+         #endif   
+      #endif             
       #check if VisSimTools folder is found                  
       self.checkVisSimTools(self.vtVars,vsExtension)
       
@@ -182,42 +190,31 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
           #TODO: download elastix binaries as additional option
           return -1
       #endif
-      cochleaSHA256      ='b4887a7384a2e5a74cd79bc4179f0b85349e3f5bafff9e284ebaf6675d2b6322'
-      cervicalSpineSHA256='6dc3e4e019910485f183d448f328197ca4e958f6dab2c56c964281d84f823315'
       othersWebLink =  ""      
       if vsExtension ==0: # cochlea
-         # TODO: optimise this part to download only the missing files        
-         # Check if elastix exist or download it 
+         # TODO: optimise this part to download only the missing files                 
          print("      Cochlea Extension is selected")            
-         # check if other files exist
-         if  os.path.exists(vtVars['modelPath']): 
-            print("      Other files are found !" )
-            print("      Parameter file: "  + vtVars['parsPath'])
-            print("      Cropping Length: " + vtVars['croppingLength'] )
-         else:
-            othersWebLink = vtVars['othersWebLink']      
-                           
-         #endif
-      elif vsExtension ==1: # Spine
-         # TODO: optimise this part to download only the missing files        
-         # Check if elastix exist or download it 
+      elif vsExtension ==1: # CervicalSpine             
          print("      Spine Extension is selected")            
-         if  os.path.exists(vtVars['modelPath']): 
-             print("      Other files are found !" )
-             if self.chkSHA256Sum(vtVars['modelPath'], cervicalSpineSHA256):  
-                print("      Parameter file: "  + vtVars['parsPath'])
-                print("      Cropping Length: " + vtVars['croppingLength'] )
-             else:
-               othersWebLink = vtVars['othersWebLink']      
-             #endif
-         #endif
+      else:
+         print("   Wrong extension ID")            
+         return -1
+      #endif 
+      # check if model files exist
+      if  (os.path.exists(vtVars['modelPath'])) and (self.chkSHA256Sum(vtVars['modelPath'], self.OthersSHA256)): 
+          print("      Model folder is found..." )
+          print("      Parameter file: "  + vtVars['parsPath'])
+          print("      Cropping Length: " + vtVars['croppingLength'] )             
+      else:
+          print("      Models or contents are wrong, trying to download ..." )
+          othersWebLink = vtVars['othersWebLink']      
       #endif  
       if not othersWebLink=="":
-         print("      Other files are  missing, trying to download ... ")
+         print("      Downloading VisSim Tools  ... ")
          try:                               
                 print("      Downloading VisSimTools others ...")
                 vissimZip = expanduser("~/VisSimToolsTmp.zip")      
-                uFile = urllib.request.urlretrieve(othersWebLink,vissimZip)                       
+                uFile = urllib.urlretrieve(othersWebLink,vissimZip)                       
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
                 zip_ref.extractall(expanduser("~/"))
@@ -231,33 +228,28 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 return -1
        #end try-except        
   #enddef
-
-  def chkSHA256Sum(self, folderPath, sha256Sum):  
-      # zip the folder temporary, compute the checksum then remove the zipped file
-     zipFileName = os.path.join(os.path.abspath(os.path.join(folderPath, os.pardir)) ,'tst.zip')
-     print(zipFileName)
-     zipf = zipfile.ZipFile(zipFileName, 'w', zipfile.ZIP_DEFLATED)
-     # ziph is zipfile handle
-     for root, dirs, files in os.walk(folderPath):
-        for file in files:
-            fnm =  os.path.join(root, file)
-            print(fnm)
-            zipf.write(fnm)
-     zipf.close()
-     sha256_hash = hashlib.sha256()
-     with open(zipFileName,"rb") as f:
-         # Read and update hash string value in blocks of 4K
-         for byte_block in iter(lambda: f.read(4096),b""):
-             sha256_hash.update(byte_block)
-         #endfor   
-         sha256computedCheckSum = sha256_hash.hexdigest()
-         updatedModel = False 
-         if sha256computedCheckSum == sha256Sum:
-            updatedModel = True
-         #endif 
-     #endwith
-     os.remove(zipFileName)
-     return updatedModel 
+  
+  def chkSHA256Sum(self, folderPath, sha256Sum):
+      sha256_hash = hashlib.sha256()
+      for root, dirs, files in os.walk(folderPath):
+         for names in files:
+            f1 = open(os.path.join(root,names), 'rb')
+            while 1:
+               # Read file in as little chunks
+               buf = f1.read(4096)
+               if not buf : break
+               sha256_hash.update(hashlib.sha256(buf).hexdigest())
+            f1.close()
+            #endwhile
+        #endfor names
+      #endforroot      
+      sha256computedCheckSum = sha256_hash.hexdigest()
+      updatedModel = False 
+      print("      sha256computedCheckSum: " +sha256computedCheckSum)
+      if sha256computedCheckSum == sha256Sum:
+         updatedModel = True
+      #endif 
+      return updatedModel 
   #enddef
     
   # string to boolean converter
@@ -504,19 +496,21 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            #inputCropIsoPath = os.path.splitext(inputVolume.GetStorageNode().GetFileName())[0] +"_C"+str(vtID) +"_crop_iso.nrrd"  
            print("iso cropped: "+inputCropIsoPath)
            resampleSpacing = " ["+ str(self.RSx) + "," + str(self.RSy) + "," + str(self.RSz) + "] "
-           try:
-               resamplingCommand = slicer.modules.resamplescalarvolume.path
-           except AttributeError:
-               #TODO: Get Slicer PATH
-               SlicerPath      =os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
-               SlicerBinPath   = os.path.join(SlicerPath,"Slicer")
-               ResampleBinPath =  os.path.join( (glob.glob(os.path.join(SlicerPath,"lib","Slicer") + '*'))[0]    , "cli-modules","ResampleScalarVolume" )
-               if sys.platform == 'win32':
-                   ResampleBinPath + ".exe"
-                   resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
-               else:
-                   #note: in winedows, no need to use --launch
-                   resamplingCommand = ResampleBinPath + ".exe"
+           SlicerBinPath=""
+           ResampleBinPath=""
+           ## this produces error in windows
+           #resamplingCommand = slicer.modules.resamplescalarvolume.path
+           #os.system(resamplingCommand)                
+           #TODO: Get Slicer PATH			  
+           SlicerPath      =  os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
+           SlicerBinPath   =  os.path.join(SlicerPath,"Slicer")
+           ResampleBinPath =  os.path.join( (glob.glob(os.path.join(SlicerPath,"lib","Slicer") + '*'))[0]    , "cli-modules","ResampleScalarVolume" )
+           if sys.platform == 'win32':
+               ResampleBinPath + ".exe"
+               resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
+           else:
+               #note: in windows, no need to use --launch
+               resamplingCommand = ResampleBinPath + ".exe"
            #endtry
            print(resamplingCommand)
            si = None 
