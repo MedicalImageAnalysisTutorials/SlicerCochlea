@@ -119,7 +119,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['othersUniKoWebLink']  = ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")  
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
-         self.OthersSHA256                  = 'b4887a7384a2e5a74cd79bc4179f0b85349e3f5bafff9e284ebaf6675d2b6322' 
+         self.OthersSHA256                  = '763be6b5b11f0f6a3ed73d1a5ef5df34cdbbf46a3e1728195e79e8dcd26313d1' 
          parsPath                           = self.vtVars['vissimPath']  + ",pars,parCochSeg.txt" 
          self.vtVars['parsPath']            = os.path.join(*parsPath.split(","))
          modelPath                          = self.vtVars['vissimPath']  + ",models,modelCochlea" 
@@ -141,7 +141,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          print("VisSimCommonLogic: initializing global variables:")  
          self.vtVars['othersUniKoWebLink']   = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
          self.vtVars['othersWebLink']        = "https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
-         self.OthersSHA256                   = '6dc3e4e019910485f183d448f328197ca4e958f6dab2c56c964281d84f823315'          
+         self.OthersSHA256                   = 'fbcd25344b649cb3055674ff740be305f0c975781726c353ef11566be1b545c0'          
          parsPath                            = self.vtVars['vissimPath']  + ",pars,parSpiSeg.txt" 
          self.vtVars['parsPath']             = os.path.join(*parsPath.split(","))
          modelPath                           = self.vtVars['vissimPath']  + ",models,modelCervicalSpine" 
