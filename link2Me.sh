@@ -1,6 +1,6 @@
 # this link the installed extension source file to this repository.
 
-ewd1=$HOME"/.config/NA-MIC/Extensions-27931"
+ewd1=$HOME"/.config/NA-MIC/Extensions-28257"
 ewd2="lib/Slicer-4.10/qt-scripted-modules"
 ghb=""
 
