@@ -497,7 +497,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            #TODO: Get Slicer PATH			  
            SlicerPath      =  os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
            SlicerBinPath   =  os.path.join(SlicerPath,"Slicer")
-           ResampleBinPath =  os.path.join( (glob.glob(os.path.join(SlicerPath,"lib","Slicer") + '*'))[0]    , "cli-modules","ResampleScalarVolume" )
+           ResampleBinPath =  os.path.join(SlicerPath,"lib","Slicer-4.10" , "cli-modules","ResampleScalarVolume" )
            if sys.platform == 'win32':
                ResampleBinPath + ".exe"
                resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
