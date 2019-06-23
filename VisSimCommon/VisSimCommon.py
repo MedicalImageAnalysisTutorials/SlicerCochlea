@@ -7,12 +7,11 @@
 #  [1] https://www.slicer.org                                                         #
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
-#  Updated: 20.6.2019                                                                 # 
+#  Slicer 4.11                                                                        # 
+#  Updated: 23.6.2019                                                                 #
 #-------------------------------------------------------------------------------------#
 #TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
 #-------------------------------------------------------------------------------------#
-                                                                                      #
 # this file can be updated andreload automatically when call dependant module by      # 
 # modifing bin/python/slicer/ScriptedLoadableModule.py                                #
 #    def onReload(self):
@@ -22,12 +21,10 @@
 #       if self.moduleName in VisSimModules:
 #          print("Reloading VisSimCommon ............")
 #          slicer.util.reloadScriptedModule("VisSimCommon")
-#       slicer.util.reloadScriptedModule(self.moduleName)  
-#TODO: check how to override onReload in the current module
-  
+#       slicer.util.reloadScriptedModule(self.moduleName)    
 #======================================================================================
 import os, re , datetime, time ,shutil, unittest, logging, zipfile,  stat,  inspect
-import sitkUtils, sys ,math, platform  , glob,subprocess, urllib.request,hashlib
+import sitkUtils, sys ,math, platform  , glob,subprocess, hashlib
 import numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
 from __main__ import vtk, qt, ctk, slicer
@@ -75,7 +72,7 @@ class VisSimCommonWidget(ScriptedLoadableModuleWidget):
   #enddef
 
 class VisSimCommonLogic(ScriptedLoadableModuleLogic):
-  
+
   ElastixLogic = Elastix.ElastixLogic()
   ElastixBinFolder = ElastixLogic.getElastixBinDir()+"/"
 
@@ -118,12 +115,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       if vsExtension == 0: #0=cochlea
          self.vtVars['othersUniKoWebLink']  = ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")  
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
-         self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
          self.OthersSHA256                  = '763be6b5b11f0f6a3ed73d1a5ef5df34cdbbf46a3e1728195e79e8dcd26313d1' 
-         parsPath                           = self.vtVars['vissimPath']  + ",pars,parCochSeg.txt" 
-         self.vtVars['parsPath']            = os.path.join(*parsPath.split(","))
-         modelPath                          = self.vtVars['vissimPath']  + ",models,modelCochlea" 
-         self.vtVars['modelPath']           = os.path.join(*modelPath.split(","))            
+         self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath']  , "pars","parCochSeg.txt")
+         self.vtVars['modelPath']           = os.path.join(self.vtVars['vissimPath'], "models","modelCochlea")            
          self.vtVars['downSz']              = "500"
          self.vtVars['inputPoint']          = "[0,0,0]" # initial poisition = no position               
          self.vtVars['croppingLength']      = "[ 10 , 10 , 10 ]"   #Cropping Parameters
@@ -142,10 +136,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['othersUniKoWebLink']   = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
          self.vtVars['othersWebLink']        = "https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
          self.OthersSHA256                   = 'fbcd25344b649cb3055674ff740be305f0c975781726c353ef11566be1b545c0'          
-         parsPath                            = self.vtVars['vissimPath']  + ",pars,parSpiSeg.txt" 
-         self.vtVars['parsPath']             = os.path.join(*parsPath.split(","))
-         modelPath                           = self.vtVars['vissimPath']  + ",models,modelCervicalSpine" 
-         self.vtVars['modelPath']            = os.path.join(*modelPath.split(","))
+         self.vtVars['parsPath']             = os.path.join(self.vtVars['vissimPath']  , "pars","parSpiSeg.txt" )
+         self.vtVars['modelPath']            = os.path.join(self.vtVars['vissimPath']  , "models","modelCervicalSpine" )
          self.vtVars['vtID']                 = "7"
          vtMethodsegT= [",Default"]
          vtMethodsgT = ["S.seg" ]
@@ -211,10 +203,16 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endif  
       if not othersWebLink=="":
          print("      Downloading VisSim Tools  ... ")
-         try:                               
+         try:   
+                #Python2 and Python3 compitiblity  
+                if sys.version_info[0] < 3:  #Python2
+                    import urllib                
+                else                           :  #Python3
+                    import urllib.request                
+                #endif                    
                 print("      Downloading VisSimTools others ...")
                 vissimZip = expanduser("~/VisSimToolsTmp.zip")      
-                uFile = urllib.urlretrieve(othersWebLink,vissimZip)                       
+                uFile = urllib.urlretrieve(othersWebLink,vissimZip)   
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
                 zip_ref.extractall(expanduser("~/"))
@@ -238,9 +236,14 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                # Read file in as little chunks
                buf = f1.read(4096)
                if not buf : break
-               sha256_hash.update(hashlib.sha256(buf).hexdigest())
-            f1.close()
+               #Python2 and Python3 compitiblity  
+               if sys.version_info[0] < 3:  #Python2
+                  sha256_hash.update(hashlib.sha256(buf).hexdigest())
+               else                           :  #Python3
+                  sha256_hash.update(hashlib.sha256(buf).digest())
+               #endif                    
             #endwhile
+            f1.close()
         #endfor names
       #endforroot      
       sha256computedCheckSum = sha256_hash.hexdigest()
@@ -251,7 +254,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endif 
       return updatedModel 
   #enddef
-    
+
   # string to boolean converter
   def s2b(self,s):
         return s.lower() in ("yes", "true", "t", "1")
@@ -516,8 +519,11 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            si = None 
            currentOS = sys.platform           
            cmdPars = " -i linear -s "+ resampleSpacing + inputCropPath +" "+inputCropIsoPath  
-           Cmd = resamplingCommand  + cmdPars
+           Cmd = resamplingCommand  + cmdPars		   
            if sys.platform == 'win32':
+              #note: in windows, no need to use --launch
+              SlicerBinPath = SlicerBinPath +".exe"
+              resamplingCommand = ResampleBinPath + ".exe"
               print(os.path.getsize(resamplingCommand))
               si = subprocess.STARTUPINFO()
               si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -548,12 +554,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       print ("************  Compute the Transform **********************")
       currentOS = sys.platform
       print(currentOS)
-      #python2
-      #Cmd = elastixBinPath + ' -f ' + unicode(fixed, "utf-8") + ' -m ' +  unicode(moving, "utf-8")  + ' -out ' +  unicode(output, "utf-8") + ' -p ' + parameters 
-      #python3
       Cmd = elastixBinPath + ' -f ' + fixed + ' -m ' +  moving  + ' -out ' +  output + ' -p ' + parameters 
       errStr="No error!"
-#      if hasattr(subprocess, 'mswindows'):
       if currentOS in ["win32","msys","cygwin"]:
           print(" elastix is running in Windows :( !!!") 
           print(Cmd)
@@ -754,19 +756,20 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endfor fd
       vissimPath = self.vtVars['vissimPath']
       cropfiles = os.listdir(vissimPath) 
-      try:
-          for fnm in cropfiles:
-              if "Crop" in fnm:
+      try:  
+         for fnm in cropfiles:
+             if "Crop" in fnm:
                  os.remove(os.path.join(vissimPath, fnm))
-              #endif
-              if re.search('[C][1-7]', fnm):
+             #endif
+             if re.search('[C][1-7]', fnm):
                  os.remove(os.path.join(vissimPath, fnm))
-              #endif
-          #endfor
+             #endif
+         #endfor
       except Exception as e:
              print(" Error: can not remove " + fnm)
              print(e)   
       #endtry  
+      print("removing temp nodes ...!") 
       nodes = slicer.util.getNodesByClass('vtkMRMLScalarVolumeNode')
       for f in nodes:
           if "_Crop"  in f.GetName(): slicer.mrmlScene.RemoveNode(f)
@@ -784,8 +787,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
           if ("Location" in f): slicer.util.getNodes()[f].GetDisplayNode().SetVisibility(False);
           #endif
        #endfor
-       """                      
+       """
   #enddef  
+
   def rmvSlicerNode(self,node):
     slicer.mrmlScene.RemoveNode(node)
     slicer.mrmlScene.RemoveNode(node.GetDisplayNode())
@@ -1024,7 +1028,11 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            if tblNode is None:
               print("create new table  .........................................")
               tblNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTableNode")
-              tblNode.SetName(masterNode.GetName()[0:-7]+"_tbl")
+              #tblNode.SetName(masterNode.GetName()[0:-7]+"_tbl")
+              #this work for SpineTools
+              #TODO: check if it works with vertebra tools
+              tblNode.SetName(masterNode.GetName()[0:-3]+"_tbl")
+
               for i in range(5):
                  tblNode.AddColumn()
               #endfor 
@@ -1190,5 +1198,5 @@ class VisSimCommonTest(ScriptedLoadableModuleLogic):
   def runTest(self):
     self.setUp()
     print(VisSimCommonLogic().tstSum(10,20))
-  #enddef 
-#endclass
+  #enddef
+#enclass 

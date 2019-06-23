@@ -1,4 +1,3 @@
-
 #======================================================================================
 #  3D Slicer [1] plugin that uses elastix toolbox [2] Plugin for Automatic Cochlea    # 
 #  Image Segmentation [3]. More info can be found at [4].                             #
@@ -20,7 +19,7 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.11.0                                                                      #
-#  Updated: 19.6.2019                                                                 #
+#  Updated: 23.6.2019                                                                 #
 #-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
@@ -30,7 +29,7 @@
 #  - test function can be used in external scripts. A demo example is provided        #
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile,urllib.request ,  stat,  inspect
+import os, re , datetime, time ,shutil, unittest, logging, zipfile, stat,  inspect
 import sitkUtils, sys ,math, platform  
 import numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
@@ -414,9 +413,6 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
 
     #enddef
  
-
-
-                              
 #===================================================================
 #                           Test
 #===================================================================
@@ -450,7 +446,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
              uris = urisGitHub          
              fileNames    = 'P100001_DV_L_b.nrrd'
              nodeNames    = 'P100001_DV_L_b'
-             checksums    = 'SHA256:9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5'
+             checksums    = 'SAH256:9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5'
          elif(cochleaSide=="L" and beforORafter=="_a"  ):
              cochleaPoint = [214,242,78]
              urisUniKo         = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
@@ -458,7 +454,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
              uris = urisGitHub          
              fileNames    = 'P100001_DV_L_a.nrrd'
              nodeNames    = 'P100001_DV_L_a'
-             checksums    = 'SHA256:d7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5'
+             checksums    = 'SAH256:d7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5'
          elif(cochleaSide=="R" and beforORafter=="_b" ):
              cochleaPoint = [194,216,93]
              urisUniKo   = "https://cloud.uni-koblenz-landau.de/s/4K5gAwisgqSHK4j/download"
@@ -466,7 +462,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
              uris = urisGitHub          
              fileNames    = 'P100003_DV_R_b.nrrd' 
              nodeNames    = 'P100003_DV_R_b'
-             checksums    = 'SHA256:4478778377982b6789ddf8f5ccd20f66757d6733853cce3f89faf75df2fa4faa'
+             checksums    = 'SAH256:4478778377982b6789ddf8f5ccd20f66757d6733853cce3f89faf75df2fa4faa'
          elif(cochleaSide=="R" and beforORafter=="_a" ):
              cochleaPoint = [294,250,60]
              urisUniKo    = "https://cloud.uni-koblenz-landau.de/s/WAxHyqLC3JsKY2x/download"
@@ -474,16 +470,22 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
              uris = urisGitHub          
              fileNames    = 'P100003_DV_R_a.nrrd'
              nodeNames    = 'P100003_DV_R_a'
-             checksums    = 'SHA256:c62d37e13596eafc8550f488006995d811c8d6503445d5324810248a3c3b6f89'
+             checksums    = 'SAH256:c62d37e13596eafc8550f488006995d811c8d6503445d5324810248a3c3b6f89'
          else:
              print("error in cochlea side or before after type")
              return -1
       #endif  
       #sampledata loads the volume as well but didn't provide storage node.
       if imgPath is None: 
-         tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
-         imgPath       =  os.path.join(slicer.mrmlScene.GetCacheManager().GetRemoteCacheDirectory(),fileNames)
-         slicer.mrmlScene.RemoveNode(tmpVolumeNode)
+         try:
+            tmpVolumeNode =  SampleData.downloadFromURL(uris, fileNames, nodeNames, checksums )[0]
+            imgPath       =  os.path.join(slicer.mrmlScene.GetCacheManager().GetRemoteCacheDirectory(),fileNames)
+            slicer.mrmlScene.RemoveNode(tmpVolumeNode)
+         except Exception as e:
+            print("Error: can not download sample data")
+            print (e)
+            return -1 
+         #endtry
       else:
          nodeNames = os.path.splitext(os.path.basename(imgPath))[0]
       #endif 

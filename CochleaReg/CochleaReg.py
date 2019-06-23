@@ -18,29 +18,24 @@
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
-#  Updated: 19.6.2019                                                                 # #-------------------------------------------------------------------------------------#
-#  - Add branches to github to support new Slicer versions                            #                              
-#  - Using VisSimCommon for shared functions.                                         #
-#  - Use transformation directly to transform the points.                             #
-#  - Add more support for windows and mac.                                            #   
-#  - Logic functions are independent and can be called from external script.          #
+#  Slicer 4.10.0                                                                      #
+#  Updated: 20.6.2019                                                                 # 
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile, urllib.request,  stat,  inspect
+import os, re , datetime, time ,shutil, unittest, logging, zipfile, stat,  inspect
 import sitkUtils, sys ,math, platform  
-import  numpy as np, SimpleITK as sitk
+import numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
 from __main__ import vtk, qt, ctk, slicer
-from slicer.ScriptedLoadableModule import *
-import SampleData
-
+from slicer.ScriptedLoadableModule import *   
 from copy import deepcopy
 from collections import defaultdict
 from os.path import expanduser
 from os.path import isfile
+from os.path import basename
 from PythonQt import BoolResult
 from shutil import copyfile
+import SampleData
 
 import VisSimCommon
 
@@ -379,7 +374,6 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       self.setUp()
       self.testSlicerCochleaRegistration()
   #enddef
-
   def testSlicerCochleaRegistration(self, fixedImgPath=None, fixedPoint=None, movingImgPath=None, movingPoint=None):
 
       self.delayDisplay("Starting testSlicerCochleaRegistration test")
@@ -391,7 +385,6 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       if movingPoint is None:
           movingPoint = [196,217,93]
       #endif 
-      nodeNames='P100001_DV_L_a'
       nodeNames='P100001_DV_L_a'
       fileNames='P100001_DV_L_a.nrrd'
       urisUniKo         = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
