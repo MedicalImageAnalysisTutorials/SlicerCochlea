@@ -18,9 +18,6 @@
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
-#  Updated: 23.6.2019                                                                 #
-#-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
 #  - Use transformation directly to transform the points.                             #
@@ -29,21 +26,13 @@
 #  - test function can be used in external scripts. A demo example is provided        #
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile, stat,  inspect
-import sitkUtils, sys ,math, platform  
-import numpy as np, SimpleITK as sitk
-import vtkSegmentationCorePython as vtkSegmentationCore
-from __main__ import vtk, qt, ctk, slicer
-from slicer.ScriptedLoadableModule import *   
-from copy import deepcopy
-from collections import defaultdict
-from os.path import expanduser
-from os.path import isfile
-from os.path import basename
-from PythonQt import BoolResult
+import os, time, unittest, logging
+from __future__ import print_function
 from shutil import copyfile
+import numpy as np
+from __main__ import qt, ctk, slicer
+from slicer.ScriptedLoadableModule import *
 import SampleData
-
 import VisSimCommon
 
 #TODO:
@@ -94,10 +83,8 @@ class CochleaSeg(ScriptedLoadableModule):
         self.parent.helpText += self.getDefaultModuleDocumentationLink()
         parent.acknowledgementText = " This work is sponsored by Cochlear as part of COMBS project "
         self.parent = parent
-  #end def init
-#end class CochleaSeg
 
-    
+
 #===================================================================
 #                           Main Widget
 #===================================================================
@@ -161,7 +148,6 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
     self.inputFiducialBtn.connect('clicked(bool)', lambda: self.onInputFiducialBtnClick("input"))
     self.mainFormLayout.addRow( self.inputFiducialBtn, self.inputPointEdt)    
 
-
     # Create a button to run segmentation
     self.applyBtn = qt.QPushButton("Run")
     self.applyBtn.setFixedHeight(50)
@@ -185,7 +171,6 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
     self.updateLengthBtn.toolTip = ('How to use:' ' Run segmentation first. ')
     self.updateLengthBtn.connect('clicked(bool)', self.onUpdateLengthBtnClick)
     self.mainFormLayout.addRow(self.updateLengthBtn )
-  #enddef
 
     self.layout.addStretch(1) # Collapsible button is held in place when collapsing/expanding.
   #------------------------------------------------------------------------
@@ -196,7 +181,6 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
   def onSideChkBoxChange(self):
       nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
       self.vsc.setItemChk("cochleaSide", self.sideChkBox.checked, "cochleaSide", nodes)
-  #enddef
 
   # Create a button for updating the cochlea length if the 
   #  the user move some fiducial points
@@ -205,19 +189,14 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
       for f in nodes:
           if ( "_StPts" in f.GetName()) :
              vtImgStNode = f  
-             break   
-          #endif
-      #endfor      
+             break  
   
       nodes = slicer.util.getNodesByClass('vtkMRMLTableNode')
       for f in nodes:
           if ( "_tbl" in f.GetName() ):
              spTblNode = f  
              break   
-          #endif
-      #endfor      
       self.vsc.getFiducilsDistance(vtImgStNode, spTblNode)
-  #enddef
 
   def onInputFiducialBtnClick(self,volumeType):       
       self.inputFiducialBtn.setStyleSheet("QPushButton{ background-color: White  }")   
@@ -229,21 +208,14 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
       nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
       for f in nodes:
           if ((f.GetName() == self.inputVolumeNode.GetName()+"_CochleaLocation") ):
-             #replace  current 
-             #print("inputFiducialNode exist")
              self.logic.inputFiducialNode = f  
              newNode= False
-            #endif
-      #endfor    
       if not hasattr(self.vsc, 'vtVars'):
          self.vsc.setGlobalVariables(0)
-      #end 
       self.vsc.locateItem(self.inputSelectorCoBx.currentNode(), self.inputPointEdt, 0 , 0)    
       self.logic.inputFiducialNode= self.vsc.inputFiducialNodes[0]
 
       self.inputFiducialBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
-  #enddef
-
 
   def onApplyBtnClick(self):
       self.runBtn.setText("...please wait")
@@ -265,7 +237,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
       self.runBtn.setText("Run")
       self.runBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
       slicer.app.processEvents()
-  #enddef
+
   
 #===================================================================
 #                           Logic
@@ -301,7 +273,7 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
       resOldDefPath = os.path.join(self.vsc.vtVars['outputPath'] , "deformationField"+self.vsc.vtVars['imgType'])
       resDefPath    = os.path.join(self.vsc.vtVars['outputPath'] , inputVolumeNode.GetName()+"_dFld"+self.vsc.vtVars['imgType'])
       inputImgName  = inputVolumeNode.GetStorageNode().GetFileName()
-      inputImgName  = basename(os.path.splitext(inputImgName)[0])    
+      inputImgName  = os.path.basename(os.path.splitext(inputImgName)[0])    
         
       segNodeName   = inputVolumeNode.GetName() + "_S.Seg"                 
       stpNodeName   = inputVolumeNode.GetName() + "_StPts"
@@ -309,11 +281,10 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
 
       self.vsc.removeOtputsFolderContents()
       # check if the model is found
-      if not isfile(modelPath): 
-            print >> sys.stderr, "ERROR: model is not found"            
+      if not os.path.isfile(modelPath): 
+            print("ERROR: model is not found", file=sys.stderr)
             print("modelPath: " + modelPath)
             return -1
-      # endif
 
       # Get IJK point from the fiducial to use in cropping          
       inputPoint = self.vsc.ptRAS2IJK(inputFiducialNode,inputVolumeNode,0)
@@ -321,16 +292,14 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
       if  np.sum(inputPoint)== 0 :
             print("Error: select cochlea point")
             return -1
-      #endif  
       fnm = os.path.join(self.vsc.vtVars['outputPath'] , inputVolumeNode.GetName()+"_Cochlea_Pos.fcsv")                           
       sR = slicer.util.saveNode(inputFiducialNode, fnm )  
 
       #Remove old resulted nodes
       for node in slicer.util.getNodes():
-          if ( segNodeName   == node): slicer.mrmlScene.RemoveNode(node) #endif
-          if ( transNodeName == node): slicer.mrmlScene.RemoveNode(node) #endif
-      #endfor    
-        
+          if ( segNodeName   == node): slicer.mrmlScene.RemoveNode(node)
+          if ( transNodeName == node): slicer.mrmlScene.RemoveNode(node)
+
       inputPointT = self.vsc.v2t(inputPoint) 
         
       print("=================== Cropping =====================")                           
@@ -386,24 +355,19 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
              print(e)   
              spTblNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTableNode")
              spTblNode.SetName(tableName)
-          #endtry
           spTblNode = self.vsc.getItemInfo( vtSegNode, croppedNode, spTblNode,0)
           for i in range (0,8):
-              spTblNode.RemoveColumn(3)
-          #endfor           
+              spTblNode.RemoveColumn(3)      
           spTblNode.GetTable().GetColumn(1).SetName("Size (mm^3)")
           spTblNode.GetTable().GetColumn(2).SetName("Length (mm)")   
           spTblNode.SetCellText(0,0,"Scala Tympani")
           spTblNode.SetCellText(1,0,"Scala Vestibuli")
-          #spTblNode.resultsTableNode.SetCellText(0,2,"ST value")   
-          #spTblNode.resultsTableNode.SetCellText(1,2,"0")   
 
           self.vsc.getFiducilsDistance(vtImgStNode,spTblNode )      
           spTblNode.RemoveRow(spTblNode.GetNumberOfRows())              
           self.spTblNode=spTblNode                     
       else:
            print("error happened during segmentation ")
-      #endif
 
       #Remove temporary files and nodes:
       self.vsc.removeTmpsFiles()     
@@ -411,7 +375,6 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
       logging.info('Processing completed')
       return vtSegNode
 
-    #enddef
  
 #===================================================================
 #                           Test
@@ -419,12 +382,10 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
 class CochleaSegTest(ScriptedLoadableModuleTest):
   def setUp(self):
       slicer.mrmlScene.Clear(0)
-  #endef   
 
   def runTest(self):
       self.setUp()
       self.testSlicerCochleaSegmentation()
-  #enddef
 
   def testSlicerCochleaSegmentation(self, imgPath=None, cochleaPoint=None, cochleaSide=None):
 
@@ -474,7 +435,6 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
          else:
              print("error in cochlea side or before after type")
              return -1
-      #endif  
       #sampledata loads the volume as well but didn't provide storage node.
       if imgPath is None: 
          try:
@@ -485,10 +445,8 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
             print("Error: can not download sample data")
             print (e)
             return -1 
-         #endtry
       else:
          nodeNames = os.path.splitext(os.path.basename(imgPath))[0]
-      #endif 
       [success, inputVolumeNode]  = slicer.util.loadVolume(imgPath, returnNode=True)
       inputVolumeNode.SetName(nodeNames)
 
@@ -507,10 +465,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
       except Exception as e:
              print("Can not display results! probably an external call ...")
              print(e)   
-      #endtry  
       self.etm=time.time()
       tm=self.etm - self.stm
       print("Time: "+str(tm)+"  seconds")
       self.delayDisplay('Test testSlicerCochleaSegmentation passed!')
-  #enddef
-#endclass

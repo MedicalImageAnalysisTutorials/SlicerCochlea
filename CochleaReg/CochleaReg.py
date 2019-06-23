@@ -17,26 +17,13 @@
 #          10133. S. 10133p1-10133p5                                                  #
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
-#-------------------------------------------------------------------------------------#
-#  Slicer 4.10.0                                                                      #
-#  Updated: 20.6.2019                                                                 # 
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile, stat,  inspect
-import sitkUtils, sys ,math, platform  
-import numpy as np, SimpleITK as sitk
-import vtkSegmentationCorePython as vtkSegmentationCore
-from __main__ import vtk, qt, ctk, slicer
+import os, time, logging, unittest
+import numpy as np
+from __main__ import qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *   
-from copy import deepcopy
-from collections import defaultdict
-from os.path import expanduser
-from os.path import isfile
-from os.path import basename
-from PythonQt import BoolResult
-from shutil import copyfile
 import SampleData
-
 import VisSimCommon
 
 # TODO: 
@@ -70,8 +57,6 @@ class CochleaReg(ScriptedLoadableModule):
         parent.helpText            = " This module uses ACIR method to auatomatically register cochlea images" 
         parent.acknowledgementText = " This work is sponsored by Cochlear as part of COMBS project "
         self.parent = parent
-  #end def init
-#end class CochleaReg
 
 #===================================================================
 #                           Main Widget
@@ -185,7 +170,6 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
   def onInputFiducialBtnClick(self, volumeType):
       if not hasattr(self.vsc, 'vtVars'):
          self.vsc.setGlobalVariables(0)
-       #end 
       self.fixedVolumeNode=self.fixedSelectorCoBx.currentNode()
       self.movingVolumeNode=self.movingSelectorCoBx.currentNode()
       self.logic.fixedFiducialNode = None    
@@ -194,9 +178,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
       nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
       for f in nodes:
           if (f.GetName() == "_CochleaLocation") :
-               slicer.mrmlScene.RemoveNode(f) 
-          #endif
-      #endfor    
+               slicer.mrmlScene.RemoveNode(f)  
       # Create Fiducial Node for the cochlea location in both images
       if (volumeType=="F"):
          print(" ..... getting cochlea location in the fixed image")  
@@ -208,10 +190,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
          print(" ..... getting cochlea location in the fixed image")  
          self.vsc.locateItem(self.movingSelectorCoBx.currentNode(), self.movingPointEdt,2, 0)    
          self.movingFiducialNode= self.vsc.inputFiducialNodes[2]
-         self.movingFiducialBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
-    #endif    
-  #enddef      
-       
+         self.movingFiducialBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")   
 
   # An option to control results displaying
   def OnColorsChkBoxChange(self):
@@ -236,11 +215,9 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
       self.runBtn.setText("Run")
       self.runBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
       slicer.app.processEvents()
-  #enddef
   
   def cleanup(self):  
       pass
-  #enddef
   
 #===================================================================
 #                           Logic
@@ -285,7 +262,6 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       if  np.sum(fixedPoint)== 0 :
             print("Error: select cochlea fixed point")
             return -1
-      #endif  
       fnm = os.path.join(self.vsc.vtVars['outputPath'] , fixedVolumeNode.GetName()+"_F_Cochlea_Pos.fcsv")                           
       sR = slicer.util.saveNode(fixedFiducialNode, fnm )  
 
@@ -298,21 +274,13 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       if  np.sum(fixedPoint)== 0 :
             print("Error: select cochlea moving point")
             return -1
-      #endif  
       fnm = os.path.join(self.vsc.vtVars['outputPath'] , movingVolumeNode.GetName()+"_M_Cochlea_Pos.fcsv")                           
       sR = slicer.util.saveNode(movingFiducialNode, fnm )  
 
-      #Remove old resulted nodes
-      #for node in slicer.util.getNodes():
-      #    if ( "result"   in [node].GetName() ): slicer.mrmlScene.RemoveNode(node) #endif
-      #endfor    
-  
       # TODO: add better condition
       if  (np.sum(fixedPoint)== 0) and (np.sum(movingPoint)== 0) :
-            #qt.QMessageBox.critical(slicer.util.mainWindow(),'SlicerCochleaRegistration', 'Cochlea locations are missing')
             print("Error: select cochlea points in fixed and moving images")
             return False
-      #endif  
 
       fixedPointT = self.vsc.v2t(fixedPoint) 
       movingPointT = self.vsc.v2t(movingPoint) 
@@ -327,10 +295,9 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       croppedMovingNode.SetName(movingVolumeNode.GetName()+"_M_Crop")                                                        
       print ("************  Register cropped moving image to cropped fixed image **********************")
       cTI = self.vsc.runElastix(self.vsc.vtVars['elastixBinPath'],self.vsc.vtVars['fixedCropPath'],  self.vsc.vtVars['movingCropPath'], self.vsc.vtVars['outputPath'], self.vsc.vtVars['parsPath'], self.vsc.vtVars['noOutput'], "336")
-      #copyfile(resTransPathOld, resTransPath)
-      #genrates deformation field 
+      # generates deformation field 
       cTR = self.vsc.runTransformix(self.vsc.vtVars['transformixBinPath'],self.vsc.vtVars['movingCropPath'], self.vsc.vtVars['outputPath'], resTransPath, self.vsc.vtVars['noOutput'], "339")
-      # rename fthe file:
+      # rename the file:
       os.rename(resOldDefPath,resDefPath)   
 
       print ("************  Load deformation field Transform  **********************")
@@ -352,7 +319,6 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
           print("No error is reported during registeration ...")
       else:
            print("error happened during registration ")
-      #endif
 
       #Remove temporary files and nodes:
       self.vsc.removeTmpsFiles()     
@@ -360,7 +326,6 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       logging.info('Processing completed')
                         
       return registeredMovingVolumeNode
-    #enddef 
   
 #===================================================================
 #                           Test
@@ -368,12 +333,11 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
 class CochleaRegTest(ScriptedLoadableModuleTest):
   def setUp(self):
     slicer.mrmlScene.Clear(0)
-  #enddef
   
   def runTest(self):
       self.setUp()
       self.testSlicerCochleaRegistration()
-  #enddef
+
   def testSlicerCochleaRegistration(self, fixedImgPath=None, fixedPoint=None, movingImgPath=None, movingPoint=None):
 
       self.delayDisplay("Starting testSlicerCochleaRegistration test")
@@ -381,10 +345,8 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
 
       if fixedPoint is None:
           fixedPoint = [220,242,78]
-      #endif
       if movingPoint is None:
           movingPoint = [196,217,93]
-      #endif 
       nodeNames='P100001_DV_L_a'
       fileNames='P100001_DV_L_a.nrrd'
       urisUniKo         = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
@@ -397,10 +359,8 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
          slicer.mrmlScene.RemoveNode(tmpVolumeNode)
       else:
          nodeNames = os.path.splitext(os.path.basename(fixedImgPath))[0]
-      #endif 
       [success, fixedVolumeNode]  = slicer.util.loadVolume(fixedImgPath, returnNode=True)
       fixedVolumeNode.SetName(nodeNames)
-      #endifelse
       nodeNames='P100001_DV_L_b'
       fileNames='P100001_DV_L_b.nrrd'
       urisUniKo    = "https://cloud.uni-koblenz-landau.de/s/qMG2WPjTXabzcbX/download"
@@ -413,10 +373,8 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
          slicer.mrmlScene.RemoveNode(tmpVolumeNode)
       else:
          nodeNames = os.path.splitext(os.path.basename(movingImgPath))[0]
-      #endif 
       [success, movingVolumeNode] = slicer.util.loadVolume(movingImgPath, returnNode=True)
       movingVolumeNode.SetName(nodeNames)
-      #endifelse 
       self.logic = CochleaRegLogic()
       self.vsc   = VisSimCommon.VisSimCommonLogic()   
       #setGlobal variables. 
@@ -424,8 +382,6 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
 
       # remove contents of output folder
       self.vsc.removeOtputsFolderContents()
-
-      # record duration of the test
     
       # create a fiducial node for cochlea locations for cropping    
       fixedPointRAS = self.vsc.ptIJK2RAS(fixedPoint , fixedVolumeNode) 
@@ -451,11 +407,8 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       except Exception as e:
              print("Can not display results! probably an external call ...")
              print(e)   
-      #endtry  
         
       self.etm=time.time()
       tm=self.etm - self.stm
       print("Time: "+str(tm)+"  seconds")
       self.delayDisplay('Test testSlicerCochleaRegistration passed!')
-  #enddef          
-#endclass
