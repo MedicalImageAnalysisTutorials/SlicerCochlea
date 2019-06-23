@@ -8,7 +8,9 @@
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.10                                                                        # 
-#  Updated: 20.6.2019                                                                 #
+#  Updated: 23.6.2019                                                                 #
+#-------------------------------------------------------------------------------------#
+#TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
 #-------------------------------------------------------------------------------------#
 # this file can be updated andreload automatically when call dependant module by      # 
 # modifing bin/python/slicer/ScriptedLoadableModule.py                                #
@@ -22,7 +24,7 @@
 #       slicer.util.reloadScriptedModule(self.moduleName)    
 #======================================================================================
 import os, re , datetime, time ,shutil, unittest, logging, zipfile,  stat,  inspect
-import sitkUtils, sys ,math, platform  , glob,subprocess, urllib, urllib2, hashlib
+import sitkUtils, sys ,math, platform  , glob,subprocess, hashlib
 import numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
 from __main__ import vtk, qt, ctk, slicer
@@ -67,8 +69,10 @@ class VisSimCommonWidget(ScriptedLoadableModuleWidget):
       self.mainCollapsibleBtn = ctk.ctkCollapsibleButton()
       self.mainCollapsibleBtn.text = "VisSim Common"
       self.layout.addWidget(self.mainCollapsibleBtn)
+  #enddef
 
 class VisSimCommonLogic(ScriptedLoadableModuleLogic):
+
   ElastixLogic = Elastix.ElastixLogic()
   ElastixBinFolder = ElastixLogic.getElastixBinDir()+"/"
 
@@ -199,10 +203,16 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endif  
       if not othersWebLink=="":
          print("      Downloading VisSim Tools  ... ")
-         try:                               
+         try:   
+                #Python2 and Python3 compitiblity  
+                if sys.version_info[0] < 3:  #Python2
+                    import urllib                
+                else                           :  #Python3
+                    import urllib.request                
+                #endif                    
                 print("      Downloading VisSimTools others ...")
                 vissimZip = expanduser("~/VisSimToolsTmp.zip")      
-                uFile = urllib.urlretrieve(othersWebLink,vissimZip)                       
+                uFile = urllib.urlretrieve(othersWebLink,vissimZip)   
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
                 zip_ref.extractall(expanduser("~/"))
@@ -226,9 +236,14 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                # Read file in as little chunks
                buf = f1.read(4096)
                if not buf : break
-               sha256_hash.update(hashlib.sha256(buf).hexdigest())
-            f1.close()
+               #Python2 and Python3 compitiblity  
+               if sys.version_info[0] < 3:  #Python2
+                  sha256_hash.update(hashlib.sha256(buf).hexdigest())
+               else                           :  #Python3
+                  sha256_hash.update(hashlib.sha256(buf).digest())
+               #endif                    
             #endwhile
+            f1.close()
         #endfor names
       #endforroot      
       sha256computedCheckSum = sha256_hash.hexdigest()
@@ -468,7 +483,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         croppedNode = slicer.util.getNode(nodeName)
         print("cropped:     "+inputCropPath)
         slicer.util.saveNode( croppedNode, inputCropPath)
-
         #-------------------------------------------------------
         # Resampling: this produces better looking models  
         #-------------------------------------------------------
@@ -540,12 +554,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       print ("************  Compute the Transform **********************")
       currentOS = sys.platform
       print(currentOS)
-      #python2
-      #Cmd = elastixBinPath + ' -f ' + unicode(fixed, "utf-8") + ' -m ' +  unicode(moving, "utf-8")  + ' -out ' +  unicode(output, "utf-8") + ' -p ' + parameters 
-      #python3
       Cmd = elastixBinPath + ' -f ' + fixed + ' -m ' +  moving  + ' -out ' +  output + ' -p ' + parameters 
       errStr="No error!"
-#      if hasattr(subprocess, 'mswindows'):
       if currentOS in ["win32","msys","cygwin"]:
           print(" elastix is running in Windows :( !!!") 
           print(Cmd)
@@ -777,8 +787,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
           if ("Location" in f): slicer.util.getNodes()[f].GetDisplayNode().SetVisibility(False);
           #endif
        #endfor
-       """
-                      
+       """                     
   #enddef  
 
   def rmvSlicerNode(self,node):
@@ -984,7 +993,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       # get the new IJK position and display it
       rasPt = [0,0,0] 
       i = caller.GetAttribute('Markups.MovingMarkupIndex')
-      if not (i is None):
+      if not (i is None or i==''):
          i=int(i)
          caller.GetNthFiducialPosition(i,rasPt)
          self.inputPoint = self.ptRAS2IJK(caller, self.inputVolumeNode, i)        

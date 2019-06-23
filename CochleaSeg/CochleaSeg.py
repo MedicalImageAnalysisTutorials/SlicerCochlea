@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #======================================================================================
 #  3D Slicer [1] plugin that uses elastix toolbox [2] Plugin for Automatic Cochlea    # 
 #  Image Segmentation [3]. More info can be found at [4].                             #
@@ -19,17 +18,18 @@
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  SLicer 4.10
-#  Updated: 20.6.2019                                                                 #    
+#  Slicer 4.10                                                                      #
+#  Updated: 23.6.2019                                                                 #
 #-------------------------------------------------------------------------------------#
 #  - Add branches to github to support new Slicer versions                            #                              
 #  - Using VisSimCommon for shared functions.                                         #
 #  - Use transformation directly to transform the points.                             #
 #  - Add more support for windows and mac.                                            #   
 #  - Logic functions are independent and can be called from external script.          #
+#  - test function can be used in external scripts. A demo example is provided        #
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile,urllib , urllib2, stat,  inspect
+import os, re , datetime, time ,shutil, unittest, logging, zipfile, stat,  inspect
 import sitkUtils, sys ,math, platform  
 import numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
@@ -53,8 +53,9 @@ import VisSimCommon
 #      with error : Failed to get reference image geometry 
 #    - the problem above solved by exporting to label with model as reference then export to .seg.
 #      but still we have bad results. More testing is needed.    
-# 2. remove temp nodes and files  
-# 2. update links for models and sample images
+# 2. cleaning, removing temp nodes and files  
+# 3. add alternative links for models and sample images.
+# 4. local testing with different machines. 
 
 # Later:
 # - Checking if all above are needed 
@@ -62,7 +63,7 @@ import VisSimCommon
 # - Testing in both Windows and Linux. 
 # - Supporting DICOM. 
 # - Supporting illegal filename.  
-# - Using  SlierElastix binaries.   
+# - Add alternative to use elastix binaries directly by downloading the binary release.   
 # - Visualizing the interimediate steps. 
 # 
 #  
@@ -108,7 +109,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
     print("=======================================================")   
     print("   Automatic Cochlea Image Segmentation               ")
     print("=======================================================")           
-    #slicer.util.reloadScriptedModule("VisSimCommon")
+
     ScriptedLoadableModuleWidget.setup(self)
     
     # to access logic class functions and setup global variables
@@ -412,9 +413,6 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
 
     #enddef
  
-
-
-                              
 #===================================================================
 #                           Test
 #===================================================================

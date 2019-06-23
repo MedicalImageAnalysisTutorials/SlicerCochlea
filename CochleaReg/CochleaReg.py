@@ -20,15 +20,9 @@
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.10.0                                                                      #
 #  Updated: 20.6.2019                                                                 # 
-#-------------------------------------------------------------------------------------#
-#  - Add branches to github to support new Slicer versions                            #                              
-#  - Using VisSimCommon for shared functions.                                         #
-#  - Use transformation directly to transform the points.                             #
-#  - Add more support for windows and mac.                                            #   
-#  - Logic functions are independent and can be called from external script.          #
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile,urllib , urllib2, stat,  inspect
+import os, re , datetime, time ,shutil, unittest, logging, zipfile, stat,  inspect
 import sitkUtils, sys ,math, platform  
 import numpy as np, SimpleITK as sitk
 import vtkSegmentationCorePython as vtkSegmentationCore
@@ -380,7 +374,6 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       self.setUp()
       self.testSlicerCochleaRegistration()
   #enddef
-
   def testSlicerCochleaRegistration(self, fixedImgPath=None, fixedPoint=None, movingImgPath=None, movingPoint=None):
 
       self.delayDisplay("Starting testSlicerCochleaRegistration test")
