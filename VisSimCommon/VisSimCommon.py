@@ -8,7 +8,7 @@
 #                                                                                     # 
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.11                                                                        # 
-#  Updated: 23.6.2019                                                                 #
+#  Updated: 24.6.2019                                                                 #
 #-------------------------------------------------------------------------------------#
 #TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
 #-------------------------------------------------------------------------------------#
@@ -23,34 +23,17 @@
 #          slicer.util.reloadScriptedModule("VisSimCommon")
 #       slicer.util.reloadScriptedModule(self.moduleName)    
 #======================================================================================
-import os, re , datetime, time ,shutil, unittest, logging, zipfile,  stat,  inspect
-import sitkUtils, sys ,math, platform  , glob,subprocess, hashlib
-import numpy as np, SimpleITK as sitk
-import vtkSegmentationCorePython as vtkSegmentationCore
+import os, re, sys, math, unittest, logging, zipfile, platform, subprocess, hashlib
+import numpy as np
+import SimpleITK as sitk
+import sitkUtils 
 from __main__ import vtk, qt, ctk, slicer
-from slicer.ScriptedLoadableModule import *   
-from copy import deepcopy
-from collections import defaultdict
-from os.path import expanduser
-from os.path import isfile
-from os.path import basename
-from PythonQt import BoolResult
+from slicer.ScriptedLoadableModule import *  
 import SampleData
 
 import SegmentStatistics
 import Elastix
 
-#TODO:
-# - test on vsScritps
-# - update cochlea GUI
-# - Update private spine plugins
-#  
-# - remove temporary nodes and files in a cleaning procedure after segmentation
-#       - can be activated or disables within the call 
-#       - cropped images
-# - fix cochlea right model segmentation
-# - Update python 3 branches
- 
 #===================================================================
 #                           Main Class
 #===================================================================
@@ -116,8 +99,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['othersUniKoWebLink']  = ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")  
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")  
          self.OthersSHA256                  = '763be6b5b11f0f6a3ed73d1a5ef5df34cdbbf46a3e1728195e79e8dcd26313d1' 
-         self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath']  , "pars","parCochSeg.txt")
-         self.vtVars['modelPath']           = os.path.join(self.vtVars['vissimPath'], "models","modelCochlea")            
+         self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath'] , "pars","parCochSeg.txt")
+         self.vtVars['modelPath']           = os.path.join(self.vtVars['vissimPath'] , "models","modelCochlea")            
          self.vtVars['downSz']              = "500"
          self.vtVars['inputPoint']          = "[0,0,0]" # initial poisition = no position               
          self.vtVars['croppingLength']      = "[ 10 , 10 , 10 ]"   #Cropping Parameters
@@ -175,7 +158,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       print(" Defaults paths: " )
       print("      VisSimTools folder: " + vtVars['vissimPath'])
       print("      Output folder     : " + vtVars['outputPath'])            
-      if isfile(vtVars['elastixBinPath'].strip()): 
+      if os.path.isfile(vtVars['elastixBinPath'].strip()): 
           print("      elastix binaries are found in " + vtVars['elastixBinPath'] )
       else:           
           print("      elastix binaries are missing, please install SlicerElastix extension ... ")
@@ -206,13 +189,13 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          try:   
                 #Python2 and Python3 compitiblity  
                 if sys.version_info[0] < 3:  #Python2
-                    import urllib                
+                    import urllib as mylib                
                 else                           :  #Python3
-                    import urllib.request                
+                    import urllib.request as mylib               
                 #endif                    
                 print("      Downloading VisSimTools others ...")
                 vissimZip = expanduser("~/VisSimToolsTmp.zip")      
-                uFile = urllib.urlretrieve(othersWebLink,vissimZip)   
+                uFile = mylib.urlretrieve(othersWebLink,vissimZip)   
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
                 zip_ref.extractall(expanduser("~/"))
@@ -225,8 +208,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 print(e)   
                 return -1
        #end try-except        
-  #enddef
-  
+  #enddef  
+
   def chkSHA256Sum(self, folderPath, sha256Sum):
       sha256_hash = hashlib.sha256()
       for root, dirs, files in os.walk(folderPath):
@@ -546,7 +529,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         print(" Cropping is done !!! ") 
         # so we can remove these files later
         return inputCropPath
-        
+  #enddef                
   #--------------------------------------------------------------------------------------------
   #                        run elastix
   #--------------------------------------------------------------------------------------------      
@@ -777,17 +760,15 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       for f in nodes:         
           if "Location" in f.GetName(): f.GetDisplayNode().SetVisibility(False) 
       #endfor      
-      """
-      #using dictionary doesn ot work: 
-      #remove temp nodes
-      nodes = slicer.util.getNodes().keys()
-      for f in nodes:         
-          if ("_Crop"    in f): slicer.mrmlScene.RemoveNode(slicer.util.getNodes()[f]); 
-          #if ("Location" in f): slicer.mrmlScene.RemoveNode(slicer.util.getNodes()[f]);
-          if ("Location" in f): slicer.util.getNodes()[f].GetDisplayNode().SetVisibility(False);
-          #endif
-       #endfor
-       """
+      ##using dictionary doesn ot work: 
+      ##remove temp nodes
+      #nodes = slicer.util.getNodes().keys()
+      #for f in nodes:         
+      #    if ("_Crop"    in f): slicer.mrmlScene.RemoveNode(slicer.util.getNodes()[f]); 
+      #    #if ("Location" in f): slicer.mrmlScene.RemoveNode(slicer.util.getNodes()[f]);
+      #    if ("Location" in f): slicer.util.getNodes()[f].GetDisplayNode().SetVisibility(False);
+      #    #endif
+      # #endfor
   #enddef  
 
   def rmvSlicerNode(self,node):
