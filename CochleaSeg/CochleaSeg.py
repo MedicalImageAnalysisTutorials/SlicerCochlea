@@ -29,19 +29,12 @@
 #  - test function can be used in external scripts. A demo example is provided        #
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile, stat,  inspect
-import sitkUtils, sys ,math, platform  
-import numpy as np, SimpleITK as sitk
-import vtkSegmentationCorePython as vtkSegmentationCore
-from __main__ import vtk, qt, ctk, slicer
-from slicer.ScriptedLoadableModule import *   
-from copy import deepcopy
-from collections import defaultdict
-from os.path import expanduser
-from os.path import isfile
-from os.path import basename
-from PythonQt import BoolResult
+from __future__ import print_function
+import os, time, unittest, logging
 from shutil import copyfile
+import numpy as np
+from __main__ import qt, ctk, slicer
+from slicer.ScriptedLoadableModule import *
 import SampleData
 
 import VisSimCommon
@@ -446,7 +439,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
              uris = urisGitHub          
              fileNames    = 'P100001_DV_L_b.nrrd'
              nodeNames    = 'P100001_DV_L_b'
-             checksums    = 'SAH256:9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5'
+             checksums    = 'SHA256:9a5722679caa978b1a566f4a148c8759ce38158ca75813925a2d4f964fdeebf5'
          elif(cochleaSide=="L" and beforORafter=="_a"  ):
              cochleaPoint = [214,242,78]
              urisUniKo         = "https://cloud.uni-koblenz-landau.de/s/EwQiQidXqTcGySB/download"
@@ -454,7 +447,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
              uris = urisGitHub          
              fileNames    = 'P100001_DV_L_a.nrrd'
              nodeNames    = 'P100001_DV_L_a'
-             checksums    = 'SAH256:d7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5'
+             checksums    = 'SHA256:d7cda4e106294a59591f03e74fbe9ecffa322dd1a9010b4d0590b377acc05eb5'
          elif(cochleaSide=="R" and beforORafter=="_b" ):
              cochleaPoint = [194,216,93]
              urisUniKo   = "https://cloud.uni-koblenz-landau.de/s/4K5gAwisgqSHK4j/download"
@@ -462,7 +455,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
              uris = urisGitHub          
              fileNames    = 'P100003_DV_R_b.nrrd' 
              nodeNames    = 'P100003_DV_R_b'
-             checksums    = 'SAH256:4478778377982b6789ddf8f5ccd20f66757d6733853cce3f89faf75df2fa4faa'
+             checksums    = 'SHA256:4478778377982b6789ddf8f5ccd20f66757d6733853cce3f89faf75df2fa4faa'
          elif(cochleaSide=="R" and beforORafter=="_a" ):
              cochleaPoint = [294,250,60]
              urisUniKo    = "https://cloud.uni-koblenz-landau.de/s/WAxHyqLC3JsKY2x/download"
@@ -470,7 +463,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
              uris = urisGitHub          
              fileNames    = 'P100003_DV_R_a.nrrd'
              nodeNames    = 'P100003_DV_R_a'
-             checksums    = 'SAH256:c62d37e13596eafc8550f488006995d811c8d6503445d5324810248a3c3b6f89'
+             checksums    = 'SHA256:c62d37e13596eafc8550f488006995d811c8d6503445d5324810248a3c3b6f89'
          else:
              print("error in cochlea side or before after type")
              return -1

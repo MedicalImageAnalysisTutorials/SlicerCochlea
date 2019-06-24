@@ -19,22 +19,13 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.10.0                                                                      #
-#  Updated: 20.6.2019                                                                 # 
+#  Updated: 24.6.2019                                                                 # 
 #======================================================================================
 
-import os, re , datetime, time ,shutil, unittest, logging, zipfile, stat,  inspect
-import sitkUtils, sys ,math, platform  
-import numpy as np, SimpleITK as sitk
-import vtkSegmentationCorePython as vtkSegmentationCore
-from __main__ import vtk, qt, ctk, slicer
+import os, time, logging, unittest
+import numpy as np
+from __main__ import qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *   
-from copy import deepcopy
-from collections import defaultdict
-from os.path import expanduser
-from os.path import isfile
-from os.path import basename
-from PythonQt import BoolResult
-from shutil import copyfile
 import SampleData
 
 import VisSimCommon
