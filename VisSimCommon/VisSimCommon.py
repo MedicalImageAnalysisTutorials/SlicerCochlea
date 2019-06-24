@@ -74,7 +74,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #shared stuff
       self.elastixEnv                     = self.ElastixLogic.getElastixEnv()  # to load elastix libs
       self.elastixStartupInfo             = self.ElastixLogic.getStartupInfo() # to hide the console
-      self.vtVars['vissimPath']           = os.path.join(expanduser("~"),"VisSimTools")
+      self.vtVars['vissimPath']           = os.path.join(os.path.expanduser("~"),"VisSimTools")
       self.vtVars['elastixBinPath']       = os.path.join(self.ElastixBinFolder, "elastix")
       self.vtVars['transformixBinPath']   =  os.path.join(self.ElastixBinFolder, "transformix")  
       self.vtVars['winOS']                = "False"
@@ -194,11 +194,11 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                     import urllib.request as mylib               
                 #endif                    
                 print("      Downloading VisSimTools others ...")
-                vissimZip = expanduser("~/VisSimToolsTmp.zip")      
+                vissimZip = os.path.expanduser("~/VisSimToolsTmp.zip")      
                 uFile = mylib.urlretrieve(othersWebLink,vissimZip)   
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
-                zip_ref.extractall(expanduser("~/"))
+                zip_ref.extractall(os.path.expanduser("~/"))
                 zip_ref.close()  
                 #remove the downloaded zip file     
                 os.remove(vissimZip)   
