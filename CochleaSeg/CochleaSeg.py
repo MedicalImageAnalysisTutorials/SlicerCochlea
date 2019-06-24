@@ -294,7 +294,7 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
       resOldDefPath = os.path.join(self.vsc.vtVars['outputPath'] , "deformationField"+self.vsc.vtVars['imgType'])
       resDefPath    = os.path.join(self.vsc.vtVars['outputPath'] , inputVolumeNode.GetName()+"_dFld"+self.vsc.vtVars['imgType'])
       inputImgName  = inputVolumeNode.GetStorageNode().GetFileName()
-      inputImgName  = basename(os.path.splitext(inputImgName)[0])    
+      inputImgName  = os.path.basename(os.path.splitext(inputImgName)[0])    
         
       segNodeName   = inputVolumeNode.GetName() + "_S.Seg"                 
       stpNodeName   = inputVolumeNode.GetName() + "_StPts"
@@ -302,8 +302,8 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
 
       self.vsc.removeOtputsFolderContents()
       # check if the model is found
-      if not isfile(modelPath): 
-            print >> sys.stderr, "ERROR: model is not found"            
+      if not os.path.isfile(modelPath): 
+            print("ERROR: model is not found", file=sys.stderr)
             print("modelPath: " + modelPath)
             return -1
       # endif
