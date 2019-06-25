@@ -24,6 +24,7 @@
 #       slicer.util.reloadScriptedModule(self.moduleName)
 #======================================================================================
 import os, re, sys, math, unittest, logging, zipfile, platform, subprocess, hashlib
+from six.moves.urllib.request import urlretrieve
 import numpy as np
 import SimpleITK as sitk
 import sitkUtils
@@ -187,15 +188,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       if not othersWebLink=="":
          print("      Downloading VisSim Tools  ... ")
          try:
-                #Python2 and Python3 compitiblity
-                if sys.version_info[0] < 3:  #Python2
-                    import urllib as mylib
-                else                           :  #Python3
-                    import urllib.request as mylib
-                #endif
                 print("      Downloading VisSimTools others ...")
                 vissimZip = os.path.expanduser("~/VisSimToolsTmp.zip")
-                uFile = mylib.urlretrieve(othersWebLink,vissimZip)
+                uFile = urlretrieve(othersWebLink,vissimZip)
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
                 zip_ref.extractall(os.path.expanduser("~/"))
