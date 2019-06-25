@@ -20,15 +20,7 @@
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.11.0                                                                      #
 #  Updated: 24.6.2019                                                                 #
-#-------------------------------------------------------------------------------------#
-#  - Add branches to github to support new Slicer versions                            #
-#  - Using VisSimCommon for shared functions.                                         #
-#  - Use transformation directly to transform the points.                             #
-#  - Add more support for windows and mac.                                            #
-#  - Logic functions are independent and can be called from external script.          #
-#  - test function can be used in external scripts. A demo example is provided        #
 #======================================================================================
-
 from __future__ import print_function
 import os, time, unittest, logging
 from shutil import copyfile
@@ -89,7 +81,6 @@ class CochleaSeg(ScriptedLoadableModule):
         self.parent = parent
   #end def init
 #end class CochleaSeg
-
 
 #===================================================================
 #                           Main Widget
@@ -281,21 +272,15 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
       Styp="Dv"
 
       # segmentation atlas model paths
-
-      modelPath      =   self.vsc.vtVars['modelPath']+ ",Mdl"+Styp +cochleaSide +"c"+self.vsc.vtVars['imgType']
-      modelPath      =   os.path.join(*modelPath.split(","))
-      modelSegPath   =   self.vsc.vtVars['modelPath']+ ",Mdl"+Styp +cochleaSide +"cS.seg"+self.vsc.vtVars['imgType']
-      modelSegPath   =   os.path.join(*modelSegPath.split(","))
-      modelImgStPath =   self.vsc.vtVars['modelPath']+ ",Mdl"+Styp +cochleaSide +"cSt.fcsv"
-      modelImgStPath   =   os.path.join(*modelImgStPath.split(","))
+      modelPath      =   os.path.join(self.vsc.vtVars['modelPath'] , "Mdl"+Styp +cochleaSide +"c"+self.vsc.vtVars['imgType'])
+      modelSegPath   =   os.path.join(self.vsc.vtVars['modelPath'] , "Mdl"+Styp +cochleaSide +"cS.seg"+self.vsc.vtVars['imgType'])
+      modelImgStPath =   os.path.join(self.vsc.vtVars['modelPath'] , "Mdl"+Styp +cochleaSide +"cSt.fcsv")
       # set the results paths:
       resTransPathOld  = os.path.join(self.vsc.vtVars['outputPath'] ,"TransformParameters.0.txt")
       resTransPath=resTransPathOld[0:-6]+'Pars.txt'
       resOldDefPath = os.path.join(self.vsc.vtVars['outputPath'] , "deformationField"+self.vsc.vtVars['imgType'])
       resDefPath    = os.path.join(self.vsc.vtVars['outputPath'] , inputVolumeNode.GetName()+"_dFld"+self.vsc.vtVars['imgType'])
-      inputImgName  = inputVolumeNode.GetStorageNode().GetFileName()
-      inputImgName  = os.path.basename(os.path.splitext(inputImgName)[0])
-
+      inputImgName  = os.path.basename(os.path.splitext(inputVolumeNode.GetStorageNode().GetFileName())[0])
       segNodeName   = inputVolumeNode.GetName() + "_S.Seg"
       stpNodeName   = inputVolumeNode.GetName() + "_StPts"
       transNodeName = inputVolumeNode.GetName() + "_Transform"

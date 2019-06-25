@@ -1,4 +1,3 @@
-
 #======================================================================================
 #  3D Slicer [1] common functions used by VisSim extensions                           #
 #                                                                                     #
@@ -238,8 +237,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         return s.lower() in ("yes", "true", "t", "1")
   #enddef
 
-        inputPointT = self.vsc.v2t(inputPoint) # "["+str(inputPoint[0])+","+str(inputPoint[1])+","+str(inputPoint[2])+"]"
-
   #convert a vector to text
   def v2t(self,v):
       return  "["+str(v[0])+","+str(v[1])+","+str(v[2])+"]"
@@ -322,7 +319,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       ptIJK = ptIJKf.astype(np.int64)
       #print("RAS= " + str(ras)+ "   IJK= " + str(ptIJK))
       return  ptIJK
-
+  #enddef
 
   #------------------------------------------------------
   #         image2points
@@ -374,7 +371,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         self.markupsNode.SetName(inputImgNode.GetName()+ "_StPts")
         return self.markupsNode
 
-#enddef
+  #enddef
 
 
   #-----------------------------------------------------------------------------------
@@ -525,6 +522,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         # so we can remove these files later
         return inputCropPath
   #enddef
+
   #--------------------------------------------------------------------------------------------
   #                        run elastix
   #--------------------------------------------------------------------------------------------
@@ -800,7 +798,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
           #endif
           #print("side selected is " + self.vtVars[itemT])
       #endif
-
    #enddef
 
   def setVtID(self,idx,inputVolumeNode , inputFiducialNode):
@@ -853,7 +850,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         return isExternalCall
   #enddef
 
-  #this part need to be optimized
+  # Slicer4 Slicer5 conflict
+  # this part need to be optimized
   # reg =0: no registration, 1: fixed image, 2: moving image
   def locateItem(self, inputVolumeNode, inputPointEdt, reg, vtID):
       self.inputFiducialNodes = []
@@ -1162,8 +1160,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         v3DDWidgetV.zoomIn()
         v3DDWidgetV.zoomFactor =0.05 # back to default value
   #enddef
-
-
+#endclass 
 
 class VisSimCommonTest(ScriptedLoadableModuleLogic):
 
