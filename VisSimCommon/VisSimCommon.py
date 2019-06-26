@@ -22,6 +22,7 @@
 #          slicer.util.reloadScriptedModule("VisSimCommon")
 #       slicer.util.reloadScriptedModule(self.moduleName)
 #======================================================================================
+from __future__ import print_function
 import os, re, sys, math, unittest, logging, zipfile, platform, subprocess, hashlib
 from six.moves.urllib.request import urlretrieve
 import numpy as np
@@ -877,7 +878,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       inputPointEdt.setText(str(self.inputPoint))
       # Check if a volume is selected
       if not self.inputVolumeNode:
-           print >> sys.stderr, "You need to pick a input volume first before locating vertebra."
+           print("You need to pick a input volume first before locating vertebra.", file=sys.stderr)
            return -1
       #endif
       #  Display suitable during locating the vertebra
