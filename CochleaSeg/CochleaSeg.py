@@ -1,4 +1,4 @@
-#=====================================================================================
+#======================================================================================
 #  3D Slicer [1] plugin that uses elastix toolbox [2] Plugin for Automatic Cochlea    #
 #  Image Segmentation [3]. More info can be found at [4].                             #
 #  Sample cochlea datasets can be downloaded using Slicer Datastore module            #
@@ -18,7 +18,7 @@
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
+#  Slicer 4.10                                                                      #
 #  Updated: 24.6.2019                                                                 #
 #======================================================================================
 from __future__ import print_function
@@ -129,7 +129,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
 
     # Create a time label
     self.timeLbl = qt.QLabel("                 Time: 00:00")
-    self.timeLbl.setFixedWidth(500)
+    #self.timeLbl.setFixedWidth(500)
     self.tmLbl = self.timeLbl
 
     # Create a textbox for cochlea location
@@ -149,7 +149,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
     # Create a button to run segmentation
     self.applyBtn = qt.QPushButton("Run")
     self.applyBtn.setFixedHeight(50)
-    self.applyBtn.setFixedWidth (250)
+   # self.applyBtn.setFixedWidth (250)
     self.applyBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
     self.applyBtn.toolTip = ('How to use:' ' Load an images into Slicer. Pick cochlea locations using the buttons and the Slicer Fiducial tool ')
     self.applyBtn.connect('clicked(bool)', self.onApplyBtnClick)
@@ -165,7 +165,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
     # Create and link Btn to update measuerments
     self.updateLengthBtn = qt.QPushButton("Update Length")
     self.updateLengthBtn.setFixedHeight(40)
-    self.updateLengthBtn.setFixedWidth(250)
+    #self.updateLengthBtn.setFixedWidth(250)
     self.updateLengthBtn.toolTip = ('How to use:' ' Run segmentation first. ')
     self.updateLengthBtn.connect('clicked(bool)', self.onUpdateLengthBtnClick)
     self.mainFormLayout.addRow(self.updateLengthBtn )
@@ -237,7 +237,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
       print("time:" + str(self.stm))
       self.timeLbl.setText("                 Time: 00:00")
 
-      self.logic.run( self.inputSelectorCoBx.currentNode(),self.logic.inputFiducialNode, self.vsc.vtVars['cochleaSide'] )
+      self.logic.run( self.inputSelectorCoBx.currentNode(),self.logic.inputFiducialNode, self.vsc.vtVars['cochleaSide'] , 1)
 
       slicer.app.layoutManager().setLayout( slicer.modules.tables.logic().GetLayoutWithTable(slicer.app.layoutManager().layout))
       slicer.app.applicationLogic().GetSelectionNode().SetActiveTableID(self.logic.spTblNode.GetID())
@@ -259,7 +259,7 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
   #                       Segmentation Process
   #--------------------------------------------------------------------------------------------
   # This method perform the atlas segementation steps
-  def run(self, inputVolumeNode, inputFiducialNode, cochleaSide):
+  def run(self, inputVolumeNode, inputFiducialNode, cochleaSide, doCropping):
       logging.info('Processing started')
 
       self.vsc   = VisSimCommon.VisSimCommonLogic()
@@ -310,9 +310,18 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
       #endfor
 
       inputPointT = self.vsc.v2t(inputPoint)
-
-      print("=================== Cropping =====================")
-      self.vsc.vtVars['intputCropPath'] = self.vsc.runCropping(inputVolumeNode, inputPointT,self.vsc.vtVars['croppingLength'],  self.vsc.vtVars['RSxyz'],  self.vsc.vtVars['hrChk'],0)
+      #TODO: add no cropping option  
+      #   crop = resample version of the original one
+      #    seg = convert to label map with ref original image then convert to seg         
+      croppedNode  = inputVolumeNode
+      if doCropping  == 1:
+         print("=================== Cropping and Resampling =====================")
+         self.vsc.vtVars['intputCropPath'] = self.vsc.runCropping(inputVolumeNode, inputPointT,self.vsc.vtVars['croppingLength'],  self.vsc.vtVars['RSxyz'],  self.vsc.vtVars['hrChk'],0)      
+      else:
+         print("=================== Resampling =====================")
+         # create a clone from the original node  
+         self.vsc.vtVars['intputCropPath'] = self.vsc.runResampling( croppedNode,  self.vsc.vtVars['RSxyz'], 0)
+      #endif
       [success, croppedNode] = slicer.util.loadVolume(self.vsc.vtVars['intputCropPath'], returnNode=True)
       croppedNode.SetName(inputVolumeNode.GetName()+"_Crop")
       print ("************  Register model to cropped input image **********************")
@@ -360,8 +369,10 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
           # create only if it does not exist
           try:
              spTblNode =  slicer.util.getNode(tableName)
+             print(spTblNode.GetName())
           except Exception as e:
              print(e)
+             print("create new table  .........................................")
              spTblNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTableNode")
              spTblNode.SetName(tableName)
           #endtry
@@ -377,7 +388,11 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
           #spTblNode.resultsTableNode.SetCellText(1,2,"0")
 
           self.vsc.getFiducilsDistance(vtImgStNode,spTblNode )
-          spTblNode.RemoveRow(spTblNode.GetNumberOfRows())
+          #spTblNode.RemoveRow(spTblNode.GetNumberOfRows())
+
+          fnm = os.path.join(self.vsc.vtVars['outputPath'] , inputVolumeNode.GetName()+"_tbl.tsv")
+          sR = slicer.util.saveNode(spTblNode, fnm )
+
           self.spTblNode=spTblNode
       else:
            print("error happened during segmentation ")
@@ -404,7 +419,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
       self.testSlicerCochleaSegmentation()
   #enddef
 
-  def testSlicerCochleaSegmentation(self, imgPath=None, cochleaPoint=None, cochleaSide=None):
+  def testSlicerCochleaSegmentation(self, imgPath=None, cochleaPoint=None, cochleaSide=None, doCropping=None):
 
       self.delayDisplay("Starting testSlicerCochleaSegmentation test")
       self.stm=time.time()
@@ -478,7 +493,7 @@ class CochleaSegTest(ScriptedLoadableModuleTest):
       inputFiducialNode.AddFiducialFromArray(cochleaPointRAS)
 
       # run the segmentation
-      segNode = self.logic.run(inputVolumeNode, inputFiducialNode, cochleaSide)
+      segNode = self.logic.run(inputVolumeNode, inputFiducialNode, cochleaSide, doCropping)
       #display:
       try:
          self.vsc.dispSeg(inputVolumeNode,segNode,34) # 34: 4up table layout

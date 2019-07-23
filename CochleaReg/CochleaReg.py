@@ -18,8 +18,8 @@
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
-#  Updated: 24.6.2019                                                                 #
+#  Slicer 4.10.0                                                                      #
+#  Updated: 24.6.2019                                                                 # 
 #======================================================================================
 
 import os, time, logging, unittest
@@ -353,13 +353,6 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       return registeredMovingVolumeNode
     #enddef
 
-#===================================================================
-#                           Test
-#===================================================================
-class CochleaRegTest(ScriptedLoadableModuleTest):
-  def setUp(self):
-    slicer.mrmlScene.Clear(0)
-  #enddef
 
   def runTest(self):
       self.setUp()

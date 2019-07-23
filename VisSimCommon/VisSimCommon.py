@@ -6,7 +6,7 @@
 #  [1] https://www.slicer.org                                                         #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11                                                                        #
+#  Slicer 4.10                                                                        #
 #  Updated: 26.6.2019                                                                 #
 #-------------------------------------------------------------------------------------#
 #TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
@@ -66,7 +66,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       print("testing")
       return x+y
   #enddef
-
+ 
   # vsExtension = 0: Cochlea, vsExtension = 1: Spine
   def setGlobalVariables(self,vsExtension):
       # define global variables as a dictonary
@@ -287,7 +287,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
 #                 RAS  to IJK
 #------------------------------------------------------
 # This function convert RAS ro an IJK point
-#  input:  a point vector and volume node
+#  input:  a point vector as string  and volume node
 #  output: a point vector
   def ptRAS2IJK(self,ptRAS,inputImg,i):
       inputImgNode =inputImg
@@ -389,20 +389,16 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         print(" location: " + pointT + "   cropping length: " + str(croppingLengthT) )
         nodeName    = inputVolume.GetName() +"_Crop"
         nodeNameIso = inputVolume.GetName() +"_CropIso"
-        inputCropPath = self.vtVars['vissimPath']+","+nodeName +".nrrd"
-        inputCropPath = os.path.join(*inputCropPath.split(","))
-        inputCropIsoPath = self.vtVars['vissimPath']+","+nodeNameIso +".nrrd"
-        inputCropIsoPath = os.path.join(*inputCropIsoPath.split(","))
+        inputCropPath = os.path.join(self.vtVars['vissimPath'],nodeName +".nrrd")
+        inputCropIsoPath = os.path.join(self.vtVars['vissimPath'],nodeNameIso +".nrrd")
 
         #for Spine
         if not vtIDt == 0:
            print("Vertebra "+vtIDt+ " location: " + pointT + "   cropping length: " + str(croppingLengthT) )
            nodeName    = inputVolume.GetName() +"_C" + vtIDt
            nodeNameIso = inputVolume.GetName() +"_C" + vtIDt +"_iso"
-           inputCropPath = self.vtVars['vissimPath']+","+nodeName  +".nrrd"
-           inputCropPath = os.path.join(*inputCropPath.split(","))
-           inputCropIsoPath = self.vtVars['vissimPath']+","+nodeNameIso  +".nrrd"
-           inputCropIsoPath = os.path.join(*inputCropIsoPath.split(","))
+           inputCropPath = os.path.join(self.vtVars['vissimPath'] , nodeName  +".nrrd")
+           inputCropIsoPath = os.path.join(self.vtVars['vissimPath'] , nodeNameIso  +".nrrd")
         #endif
 
         croppingLength =   self.t2v(croppingLengthT)
@@ -464,56 +460,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         #-------------------------------------------------------
         #TODO: separate this in  a new function
         if hrChk:
-           # remove the old cropped node
-           nodes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
-           for f in nodes:
-               if ("_Crop" in f.GetName()):
-                  slicer.mrmlScene.RemoveNode(f )
-               #endif
-           #endfor
-           #Run slicer cli module: resample scalar volume
-           #inputCropIsoPath = os.path.splitext(inputVolume.GetStorageNode().GetFileName())[0] +"_C"+str(vtID) +"_crop_iso.nrrd"
-           print("iso cropped: "+inputCropIsoPath)
-           resampleSpacing = " ["+ str(self.RSx) + "," + str(self.RSy) + "," + str(self.RSz) + "] "
-           SlicerBinPath=""
-           ResampleBinPath=""
-           ## this produces error in windows
-           #resamplingCommand = slicer.modules.resamplescalarvolume.path
-           #os.system(resamplingCommand)
-           #TODO: Get Slicer PATH
-           SlicerPath      =  os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
-           SlicerBinPath   =  os.path.join(SlicerPath,"Slicer")
-           ResampleBinPath =  os.path.join(SlicerPath,"lib","Slicer-4.11" , "cli-modules","ResampleScalarVolume" )
-           if sys.platform == 'win32':
-               ResampleBinPath + ".exe"
-               resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
-           else:
-               #note: in windows, no need to use --launch
-               resamplingCommand = ResampleBinPath + ".exe"
-           #endtry
-           print(resamplingCommand)
-           si = None
-           currentOS = sys.platform
-           cmdPars = " -i linear -s "+ resampleSpacing + inputCropPath +" "+inputCropIsoPath
-           Cmd = resamplingCommand  + cmdPars
-           if sys.platform == 'win32':
-              #note: in windows, no need to use --launch
-              SlicerBinPath = SlicerBinPath +".exe"
-              resamplingCommand = ResampleBinPath + ".exe"
-              print(os.path.getsize(resamplingCommand))
-              si = subprocess.STARTUPINFO()
-              si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-              Cmd = resamplingCommand  + cmdPars
-              print("Executing ... "+Cmd)
-              cRs = subprocess.call(Cmd , shell = (sys.platform == currentOS) , startupinfo=si )
-           else:
-              print(currentOS)
-              print("Executing ... "+Cmd)
-              cRs = subprocess.call(Cmd , shell = (sys.platform == currentOS) , startupinfo=si )
-           #endif
-
-
-           #inputCropPath = inputCropIsoPath
+           inputCropPath = self.runResampling( croppedNode, samplingLengthT, 0)
            print(" Cropping and resampling are done !!! ")
         #endif
 
@@ -522,6 +469,72 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         print(" Cropping is done !!! ")
         # so we can remove these files later
         return inputCropPath
+  #enddef
+
+
+  #--------------------------------------------------------------------------------------------
+  #                        run resampling
+  #--------------------------------------------------------------------------------------------
+  def runResampling(self, inputVolume, samplingLengthT, vtIDt):
+      print("================= Begin resampling  ... =====================")
+      nodeNameIso = inputVolume.GetName() +"_iso"
+      inputResampledPath = os.path.join(self.vtVars['vissimPath'],nodeNameIso +".nrrd")
+      #for Spine
+      if not vtIDt == 0:
+         nodeNameIso = inputVolume.GetName() +"_C" + vtIDt +"_iso"
+         inputResampledPath = os.path.join(self.vtVars['vissimPath'] , nodeNameIso  +".nrrd")
+      #endif
+      samplingLength =   self.t2v(samplingLengthT)
+
+      # remove the old resampled node
+      nodes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
+      for f in nodes:
+          if ("_iso" in f.GetName()):
+             slicer.mrmlScene.RemoveNode(f )
+           #endif
+      #endfor
+      #Run slicer cli module: resample scalar volume
+      print("iso cropped: "+inputResampledPath)
+      resampleSpacing = " ["+ str(samplingLength[0]) + "," + str(samplingLength[1]) + "," + str(samplingLength[2]) + "] "
+      SlicerBinPath=""
+      ResampleBinPath=""
+      ## this produces error in windows
+      #resamplingCommand = slicer.modules.resamplescalarvolume.path
+      #os.system(resamplingCommand)
+      #TODO: Get Slicer PATH
+      SlicerPath      =  os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
+      SlicerBinPath   =  os.path.join(SlicerPath,"Slicer")
+      ResampleBinPath =  os.path.join(SlicerPath,"lib","Slicer-4.10" , "cli-modules","ResampleScalarVolume" )
+      if sys.platform == 'win32':
+         ResampleBinPath + ".exe"
+         resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
+      else:
+         #note: in windows, no need to use --launch
+         resamplingCommand = ResampleBinPath 
+      #endtry
+      print(resamplingCommand)
+      si = None
+      currentOS = sys.platform
+      cmdPars = " -i linear -s "+ resampleSpacing + inputVolume.GetStorageNode().GetFileName() +" "+inputResampledPath
+      Cmd = resamplingCommand  + cmdPars
+      if sys.platform == 'win32':
+         #note: in windows, no need to use --launch
+         SlicerBinPath = SlicerBinPath +".exe"
+         resamplingCommand = ResampleBinPath + ".exe"
+         print(os.path.getsize(resamplingCommand))
+         si = subprocess.STARTUPINFO()
+         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+         Cmd = resamplingCommand  + cmdPars
+         print("Executing ... "+Cmd)
+         cRs = subprocess.call(Cmd , shell = (sys.platform == currentOS) , startupinfo=si )
+      else:
+         print(currentOS)
+         print("Executing ... "+Cmd)
+         cRs = subprocess.call(Cmd , shell = (sys.platform == currentOS) , startupinfo=si )
+      #endif
+      #inputCropPath = inputCropIsoPath
+      print(" resampling is done !!! ")
+      return inputResampledPath
   #enddef
 
   #--------------------------------------------------------------------------------------------
@@ -921,24 +934,24 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
             self.inputFiducialNodes[reg].SetName(inputVolumeNode.GetName()+self.FidLabel)
             slicer.mrmlScene.AddNode(self.inputFiducialNodes[reg])
       #endif
-      self.inputFiducialNodes[reg].GetDisplayNode().SetVisibility(True);
+      self.inputFiducialNodes[reg].GetDisplayNode().SetVisibility(True);        
       self.inputFiducialNodes[reg].GetDisplayNode().SetTextScale(2)
-      self.inputFiducialNodes[reg].GetDisplayNode().SetSelectedColor(1,0,0)
+      self.inputFiducialNodes[reg].GetDisplayNode().SetSelectedColor(1,0,0)           
       # Start Fiducial Placement Mode in Slicer for one node only
       placeModePersistance = 0 # one node only
       slicer.modules.markups.logic().StartPlaceMode(placeModePersistance)
 
       # Observe scene for updates
-      self.addObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointAddedEvent,   self.onInputFiducialNodePointAddedEvent)
+      self.addObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].MarkupAddedEvent,   self.onInputFiducialNodeMarkupAddedEvent)
       self.modObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointModifiedEvent, self.onInputFiducialNodePointModifiedEvent)
-      self.rmvObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointRemovedEvent, self.onInputFiducialNodePointRemovedEvent)
-      return  self.inputFiducialNodes[reg]
+      self.rmvObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].MarkupRemovedEvent, self.onInputFiducialNodeMarkupRemovedEvent)
+      return  self.inputFiducialNodes[reg]   
   #enddef
 
   #--------------------------------------------------------------------------------------------
-  #    InputFiducialNode PointAddedEvent
+  #    InputFiducialNode MarkupAddedEvent
   #--------------------------------------------------------------------------------------------
-  def onInputFiducialNodePointAddedEvent(self, caller, event):
+  def onInputFiducialNodeMarkupAddedEvent(self, caller, event):
       # it seems this action happened after adding new fiducial
       print("Fiducial adding event!")
       #remove previous observer
@@ -976,7 +989,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endif
   #enddef
 
-  def onInputFiducialNodePointRemovedEvent(self, caller, event):
+  def onInputFiducialNodeMarkupRemovedEvent(self, caller, event):
       #print("Fiducial removed event!")
       caller.RemoveObserver(self.rmvObs)
       #i = caller.GetNumberOfFiducials()-1
@@ -995,11 +1008,12 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         segStatLogic.computeStatistics()
         if vtID == 0:  # Cochlea
            # compute the fiducial length
+           print(tblNode.GetName())
            segStatLogic.exportToTable(tblNode)
            tblNode.SetCellText(0,2,self.vtVars['StLength'])
            tblNode.SetCellText(1,2,"0")
         else           :  #Spine
-           #  egt volume size of a vertebra
+           #  get volume size of a vertebra
            if tblNode is None:
               print("create new table  .........................................")
               tblNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTableNode")

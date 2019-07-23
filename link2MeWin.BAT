@@ -1,11 +1,11 @@
 REM Create links to github sources:
-Rem /home/%USERNAME%/.config/NA-MIC/Extensions-28296
+Rem /home/%USERNAME%/.config/NA-MIC/Extensions-28257
 REM open cmd as admin then run: mklink dest src
 set ext="SlicerCochlea"
-set vr="\lib\Slicer-4.11"
-set p1="C:\Users\%USERNAME%\AppData\Roaming\NA-MIC\Extensions-28296\"
+set vr="\lib\Slicer-4.10"
+set p1="C:\Users\"%USERNAME%"\AppData\Roaming\NA-MIC\Extensions-28257\"
 set p2="\qt-scripted-modules\"
-set src="D:\myGitHub\"%ext%"\master\"
+set src="D:\myGitHub\"%ext%"\4.10\"
 
 rename %p1%%ext%%vr%%p2%"CochleaSeg.py" "CochleaSeg.py.bk"
 mklink %p1%%ext%%vr%%p2%"CochleaSeg.py" %src%"CochleaSeg""\CochleaSeg.py"
