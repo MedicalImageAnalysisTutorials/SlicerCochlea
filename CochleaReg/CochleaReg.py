@@ -353,6 +353,15 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       return registeredMovingVolumeNode
     #enddef
 
+#===================================================================
+#                           Test
+#===================================================================
+class CochleaRegTest(ScriptedLoadableModuleTest):
+  def setUp(self):
+      slicer.mrmlScene.Clear(0)
+  #endef
+
+
 
   def runTest(self):
       self.setUp()
