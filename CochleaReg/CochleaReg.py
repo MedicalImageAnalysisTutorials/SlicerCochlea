@@ -19,11 +19,11 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.10.0                                                                      #
-#  Updated: 24.6.2019                                                                 # 
+#  Updated: 25.7.2019                                                                 # 
 #======================================================================================
 
-import os, time, logging, unittest
-import numpy as np
+import os, time, logging, unittest, shutil
+import numpy as np, math
 from __main__ import qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 import SampleData
@@ -261,12 +261,16 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
           fixedImgPath = os.path.join(self.vsc.vtVars['vissimPath'], fixedVolumeNode.GetName()+".nrrd")
           slicer.util.saveNode(fixedVolumeNode, fixedImgPath)
       fixedPath = fixedVolumeNode.GetStorageNode().GetFileName()
-
       if movingVolumeNode.GetStorageNode() is None:
           movingImgPath = os.path.join(self.vsc.vtVars['vissimPath'], movingVolumeNode.GetName()+".nrrd")
           slicer.util.saveNode(movingVolumeNode, movingImgPath)
       movingPath = movingVolumeNode.GetStorageNode().GetFileName()
 
+      fixedRegTmpPath  = os.path.join(self.vsc.vtVars['vissimPath'],fixedVolumeNode.GetName() +".nrrd")
+      movingRegTmpPath = os.path.join(self.vsc.vtVars['vissimPath'],movingVolumeNode.GetName()+".nrrd") 
+      # copy images to VisSim folder
+      shutil.copyfile(fixedPath , fixedRegTmpPath  )
+      shutil.copyfile(movingPath, movingRegTmpPath)
       # Get IJK point from the fiducial to use in cropping
       fixedPoint = self.vsc.ptRAS2IJK(fixedFiducialNode,fixedVolumeNode,0)
       print("run fixed point: ============================")
@@ -307,7 +311,6 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
 
       fixedPointT = self.vsc.v2t(fixedPoint)
       movingPointT = self.vsc.v2t(movingPoint)
-
       print("=================== Cropping =====================")
       self.vsc.vtVars['fixedCropPath'] = self.vsc.runCropping(fixedVolumeNode, fixedPointT,self.vsc.vtVars['croppingLength'],  self.vsc.vtVars['RSxyz'],  self.vsc.vtVars['hrChk'],0)
       [success, croppedFixedNode] = slicer.util.loadVolume(self.vsc.vtVars['fixedCropPath'], returnNode=True)
@@ -318,22 +321,52 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       croppedMovingNode.SetName(movingVolumeNode.GetName()+"_M_Crop")
       print ("************  Register cropped moving image to cropped fixed image **********************")
       cTI = self.vsc.runElastix(self.vsc.vtVars['elastixBinPath'],self.vsc.vtVars['fixedCropPath'],  self.vsc.vtVars['movingCropPath'], self.vsc.vtVars['outputPath'], self.vsc.vtVars['parsPath'], self.vsc.vtVars['noOutput'], "336")
-      #copyfile(resTransPathOld, resTransPath)
-      #genrates deformation field
-      cTR = self.vsc.runTransformix(self.vsc.vtVars['transformixBinPath'],self.vsc.vtVars['movingCropPath'], self.vsc.vtVars['outputPath'], resTransPath, self.vsc.vtVars['noOutput'], "339")
+      resTransPathOld    = os.path.join(self.vsc.vtVars['outputPath'] , "TransformParameters.0.txt")
+      resTransPathMod    = os.path.join(self.vsc.vtVars['outputPath'] , "TransformParametersMod.txt")
+      resTransPathModInv = os.path.join(self.vsc.vtVars['outputPath'] , "TransformParametersModInv.txt")
+      shutil.copyfile(resTransPathOld, resTransPathMod)
+      shutil.copyfile(resTransPathOld, resTransPathModInv)
+      #modify transform
+      trfF= open(resTransPathMod,"rw") ;     parsLst = trfF.readlines() ;  trfF.close()
+      #print(parsLst)
+      fixedSize=[485, 485 , 121]
+      fixedorg =[-30.3125 , -30.3125 , -30.0]
+      # apply the modified transform using transformix:
+      #cTR = self.vsc.runTransformix(self.vsc.vtVars['transformixBinPath'],movingRegTmpPath, self.vsc.vtVars['outputPath'], resTransPathMod, self.vsc.vtVars['noOutput'], "339")
+      #invert the transform then apply transfrmix
+      cTR = self.vsc.runElxInvertTransform(resTransPathMod, resTransPathModInv, fixedRegTmpPath, self.vsc.vtVars['noOutput'], "339")
+      trfF= open(resTransPathModInv,"w")
+      for l in parsLst:   
+          if ("(Size "   in l):        
+             l = "(Size "   +str(fixedSize[0])+" "+str(fixedSize[1])+" "+str(fixedSize[2])+" )\n"
+          #endif 
+          if ("(Origin " in l):
+             l = "(Origin " +str(fixedorg[0]) +" "+str(fixedorg[1]) +" "+str(fixedorg[2]) +" )\n"
+          #endif 
+          trfF.write(l)
+      trfF.close()
+      fnm = "/home/ibr/VisSimTools/outputs/result.nrrd"
+      cTR = self.vsc.runTransformix(self.vsc.vtVars['transformixBinPath'],movingRegTmpPath, self.vsc.vtVars['outputPath'], resTransPathModInv, self.vsc.vtVars['noOutput'], "339")
+      #[success, neweRegisteredMovingVolumeNode] = slicer.util.loadVolume(fnm, returnNode = True)
+      #cTR = self.vsc.runTransformix(self.vsc.vtVars['transformixBinPath'],self.vsc.vtVars['movingCropPath'], self.vsc.vtVars['outputPath'], resTransPath, self.vsc.vtVars['noOutput'], "339")
       # rename fthe file:
+
       os.rename(resOldDefPath,resDefPath)
+      resImagePath        = os.path.join(self.vsc.vtVars['outputPath'] , "result.nrrd")
+      registeredImagePath = os.path.join(self.vsc.vtVars['outputPath'] , movingVolumeNode.GetName()+"_Registered.nrrd")
+      os.rename(resImagePath,registeredImagePath)
 
       print ("************  Load deformation field Transform  **********************")
       [success, vtTransformNode] = slicer.util.loadTransform(resDefPath, returnNode = True)
       vtTransformNode.SetName(transNodeName)
-      print ("************  Transform The Original Moving image **********************")
-      movingVolumeNode.SetAndObserveTransformNodeID(vtTransformNode.GetID())
-      #export seg to lbl then export back with input image as reference
-      slicer.vtkSlicerTransformLogic().hardenTransform(movingVolumeNode)     # apply the transform
-      fnm = os.path.join(self.vsc.vtVars['outputPath'] , movingVolumeNode.GetName()+"_Registered.nrrd")
-      sR = slicer.util.saveNode(movingVolumeNode, fnm )
-      [success, registeredMovingVolumeNode] = slicer.util.loadVolume(fnm, returnNode = True)
+      #print ("************  Transform The Original Moving image **********************")
+      #movingVolumeNode.SetAndObserveTransformNodeID(vtTransformNode.GetID())
+      #slicer.vtkSlicerTransformLogic().hardenTransform(movingVolumeNode)     # apply the transform
+      #fnm = os.path.join(self.vsc.vtVars['outputPath'] , movingVolumeNode.GetName()+"_Registered.nrrd")
+      #sR = slicer.util.saveNode(movingVolumeNode, fnm )
+      [success, registeredMovingVolumeNode] = slicer.util.loadVolume(registeredImagePath, returnNode = True)
+      print(registeredImagePath)
+      print(success)
       registeredMovingVolumeNode.SetName(movingVolumeNode.GetName()+"_Registered")
       #remove the tempnode and load the original
       slicer.mrmlScene.RemoveNode(movingVolumeNode)
@@ -346,7 +379,7 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       #endif
 
       #Remove temporary files and nodes:
-      self.vsc.removeTmpsFiles()
+      #self.vsc.removeTmpsFiles()
       print("================= Cochlea registration is complete  =====================")
       logging.info('Processing completed')
 
@@ -435,7 +468,7 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       movingFiducialNode.AddFiducialFromArray(movingPointRAS)
       movingFiducialNode.SetNthFiducialLabel(0, "M_CochleaLocation")
 
-      # run the segmentation
+      # run the registration
       registeredMovingVolumeNode = self.logic.run(fixedVolumeNode, fixedFiducialNode, movingVolumeNode, movingFiducialNode)
 
       #display:
@@ -451,4 +484,29 @@ class CochleaRegTest(ScriptedLoadableModuleTest):
       print("Time: "+str(tm)+"  seconds")
       self.delayDisplay('Test testSlicerCochleaRegistration passed!')
   #enddef
+
+  def comparePoints(self, ptsResultPath , ptsGroundTruthPath):
+      ptsMSE =0.0
+      #open files
+      pOf= open(ptsGroundTruthPath, "r")
+      pRf= open(ptsResultPath, "r")
+      #read lines after the labels 
+      pODt = list(pOf)[3:] 
+      pRDt = list(pRf)[3:]
+      # get values
+      pOD= [ x.split(',')[1:4] for x in pODt]
+      pOD= [ [ float(x[0]),float(x[1]),float(x[2]) ] for x in pOD]
+      pRD= [ x.split(',')[1:4] for x in pRDt]
+      pRD= [ [ float(x[0]),float(x[1]),float(x[2]) ] for x in pRD]
+      #TODO: sort based on the name
+      #compute error
+      msdF = lambda x , y : math.sqrt( sum( (x-y)**2 ))  
+      msdV=(np.zeros((len(pOD))))
+      msdV=[msdF(np.asarray(x),np.asarray(y)) for x,y in zip(pOD, pRD)]
+      ptsMSE = sum(msdV)/len(pOD)
+      return ptsMSE
+  #enddef
+
+  #enddef
+
 #endclass
