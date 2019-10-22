@@ -73,13 +73,11 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       self.vtVars = {}
 
       #shared stuff
-      self.elastixEnv                            = self.ElastixLogic.getElastixEnv()  # to load elastix libs
-      self.elastixStartupInfo                    = self.ElastixLogic.getStartupInfo() # to hide the console
-      self.vtVars['vissimPath']                  = os.path.join(os.path.expanduser("~"),"VisSimTools")
-      self.vtVars['elastixBinPath']              = os.path.join(self.ElastixBinFolder, "elastix")
-      self.vtVars['transformixBinPath']          = os.path.join(self.ElastixBinFolder, "transformix")
-      self.vtVars['elxInvertTransformBinPath']   = os.path.join(os.path.expanduser("~"),"sw","elastix-4.9","build","bin","elxInvertTransform")
-
+      self.elastixEnv                     = self.ElastixLogic.getElastixEnv()  # to load elastix libs
+      self.elastixStartupInfo             = self.ElastixLogic.getStartupInfo() # to hide the console
+      self.vtVars['vissimPath']           = os.path.join(os.path.expanduser("~"),"VisSimTools")
+      self.vtVars['elastixBinPath']       = os.path.join(self.ElastixBinFolder, "elastix")
+      self.vtVars['transformixBinPath']   =  os.path.join(self.ElastixBinFolder, "transformix")
       self.vtVars['winOS']                = "False"
       if (sys.platform == 'win32') or (platform.system()=='Windows'):
          self.vtVars['elastixBinPath']       = os.path.join(self.ElastixBinFolder, "elastix.exe")
@@ -304,9 +302,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #'vtkSlicerMarkupsModuleMRMLPython.vtkMRMLMarkupsFiducialNode'
       if not type(ptRAS) =='str':
          #TODO: add option for printing
-         if isinstance(ptRAS,tuple):
-            ras = list(ptRAS)
-         elif not i is None:
+         if not i is None:
             print(i)
             print(type(ptRAS))
             ptRAS.GetNthFiducialPosition(i,ras)
@@ -611,56 +607,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       print(cTS)
       self.chkElxER(cTS,errStr) # Check if errors happen during elastix execution
       return cTS
-  #enddef
-
-
-  #--------------------------------------------------------------------------------------------
-  #                        run elxInvertTransform
-  #--------------------------------------------------------------------------------------------
-  def runElxInvertTransform(self,inputTransform, outputTransform, movingImage, verbose, line):
-      # only 3D Euler affine supported 
-      print ("************  Apply Invert transform **********************")
-      currentOS = sys.platform
-      Cmd = self.vtVars['elxInvertTransformBinPath']  + ' -tp ' + inputTransform + ' -out ' +   outputTransform+' -m '+ movingImage
-      #if subprocess.mswindows:
-      errStr="No error!"
-#      if hasattr(subprocess, 'mswindows'):
-      if currentOS in ["win32","msys","cygwin"]:
-         print(" elxInvertTransform is running in Windows :( !!!")
-         print(Cmd)
-         si = subprocess.STARTUPINFO()
-         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-         cTS = subprocess.call(Cmd , shell = (sys.platform == currentOS) , startupinfo=si )
-      elif currentOS in ["linux","linux2"]:
-          print(" elxInvertTransform is running in Linux :) !!!")
-          CmdList = Cmd.split()
-          print(Cmd)
-          cTS=  subprocess.Popen(CmdList, env=os.environ.copy(),  stdout=subprocess.PIPE, universal_newlines=True)
-          cTS.wait()
-          out, err = cTS.communicate()
-          cTS=int(not err==None)
-      elif currentOS in ["darwin","os2","os2emx"]:
-          print(" elxInvertTransform is running in Mac :( !!!")
-          CmdList = Cmd.split()
-          print(CmdList)
-          #cTS = os.system(Cmd)
-          cTS=  subprocess.Popen(CmdList, env=os.environ.copy(),  stdout=subprocess.PIPE, universal_newlines=True)
-          cTS.wait()
-          out, err = cTS.communicate()
-          cTS=int(not err==None)
-      else:
-            print(" elxInvertTransform is running in Unknown system :( !!!")
-            cTS=1
-            errStr="elxInvertTransform error at line"+ line +", check the log files"
-      #endif
-      print(cTS)
-      self.chkElxER(cTS,errStr) # Check if errors happen during elastix execution
-      return cTS
-  #enddef
-
-  #--------------------------------------------------------------------------------------------
-  def resizeTransform(self,inputTransformPath, outTransformPath, newSize):
-      pass 
   #enddef
 
   #--------------------------------------------------------------------------------------------
