@@ -1,7 +1,8 @@
 # this link the installed extension source file to this repository.
 
-ewd1=$HOME"/.config/NA-MIC/Extensions-28257"
-ewd2="lib/Slicer-4.10/qt-scripted-modules"
+
+ewd1=$HOME"/.config/NA-MIC/Extensions-29402"
+ewd2="lib/Slicer-4.11/qt-scripted-modules"
 ghb=""
 
 #Cochlea

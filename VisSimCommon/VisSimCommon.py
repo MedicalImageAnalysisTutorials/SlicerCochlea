@@ -7,7 +7,7 @@
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 4.10                                                                        #
-#  Updated: 26.6.2019                                                                 #
+#  Updated: 16.9.2020                                                                 #
 #-------------------------------------------------------------------------------------#
 #TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
 #-------------------------------------------------------------------------------------#
@@ -73,11 +73,15 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       self.vtVars = {}
 
       #shared stuff
-      self.elastixEnv                     = self.ElastixLogic.getElastixEnv()  # to load elastix libs
-      self.elastixStartupInfo             = self.ElastixLogic.getStartupInfo() # to hide the console
-      self.vtVars['vissimPath']           = os.path.join(os.path.expanduser("~"),"VisSimTools")
-      self.vtVars['elastixBinPath']       = os.path.join(self.ElastixBinFolder, "elastix")
-      self.vtVars['transformixBinPath']   =  os.path.join(self.ElastixBinFolder, "transformix")
+      self.elastixEnv                            = self.ElastixLogic.getElastixEnv()  # to load elastix libs
+      self.elastixStartupInfo                    = self.ElastixLogic.getStartupInfo() # to hide the console
+      self.vtVars['vissimPath']                  = os.path.join(os.path.expanduser("~"),"VisSimTools")
+      #self.vtVars['elastixBinPath']              = os.path.join(self.ElastixBinFolder, "elastix")
+      #self.vtVars['transformixBinPath']          = os.path.join(self.ElastixBinFolder, "transformix")
+      self.vtVars['elastixBinPath']              = os.path.join(os.path.expanduser("~"),"sw","elastix-5.0.0","build","bin","elastix")
+      self.vtVars['transformixBinPath']          = os.path.join(os.path.expanduser("~"),"sw","elastix-5.0.0","build","bin","transformix")
+      self.vtVars['elxInvertTransformBinPath']   = os.path.join(os.path.expanduser("~"),"sw","elastix-5.0.0","build","bin","elxInvertTransform")
+
       self.vtVars['winOS']                = "False"
       if (sys.platform == 'win32') or (platform.system()=='Windows'):
          self.vtVars['elastixBinPath']       = os.path.join(self.ElastixBinFolder, "elastix.exe")
@@ -97,10 +101,12 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       slicer.mrmlScene.AddDefaultNode(msn)
 
       if vsExtension == 0: #0=cochlea
+         print("VisSimCommonLogic: initializing global variables for cochlea")
          self.vtVars['othersUniKoWebLink']  = ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")
          self.OthersSHA256                  = '763be6b5b11f0f6a3ed73d1a5ef5df34cdbbf46a3e1728195e79e8dcd26313d1'
-         self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath'] , "pars","parCochSeg.txt")
+         self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath'] ,   "pars","parCochSeg.txt")
+         self.vtVars['parsNRPath']          = os.path.join(self.vtVars['vissimPath'] , "pars","parCochSegNR.txt")        
          self.vtVars['modelPath']           = os.path.join(self.vtVars['vissimPath'] , "models","modelCochlea")
          self.vtVars['downSz']              = "500"
          self.vtVars['inputPoint']          = "[0,0,0]" # initial poisition = no position
@@ -109,6 +115,13 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['dispViewTxt']         = "Green"
          self.vtVars['cochleaSide']         = "L" # default cochlea side is left
          self.vtVars['StLength']            = "0" # initial scala tympani length
+         self.vtVars['SvLength']            = "0" # initial cochlea length, from round windows to the top of the cochlea outerside
+         self.vtVars['StLtLength']          = "0" # initial scala tympani length
+         self.vtVars['StOcLength']          = "0" # initial cochlea length, from round windows to the top of the cochlea outerside
+         self.vtVars['AvalueDistance']  = "0"
+         self.vtVars['AvalueStLtLength']    = "0" # initial cochlea length, from round windows to the top of the cochlea outerside
+         self.vtVars['AvalueStOcLength']    = "0" # initial cochlea length, from round windows to the top of the cochlea outerside
+
          self.vtVars['dispViewTxt']         = "Green"
          self.vtVars['dispViewID']          = "8" #Green, coronal view
          if (sys.platform == 'win32') or (platform.system()=='Windows'):
@@ -116,13 +129,15 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         #endif
       #Only for Cervical Spine
       elif vsExtension == 1: # Cervical Spine
-         print("VisSimCommonLogic: initializing global variables:")
-         self.vtVars['othersUniKoWebLink']   = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
-         self.vtVars['othersWebLink']        = "https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
+         print("VisSimCommonLogic: initializing global variables for cervical spine:")
+         self.vtVars['othersUniKoWebLink']   = ""#"https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
+         self.vtVars['othersWebLink']        = ""#"https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
          self.OthersSHA256                   = 'fbcd25344b649cb3055674ff740be305f0c975781726c353ef11566be1b545c0'
          self.vtVars['parsPath']             = os.path.join(self.vtVars['vissimPath']  , "pars","parSpiSeg.txt" )
+         self.vtVars['parsNRPath']           = os.path.join(self.vtVars['vissimPath'] , "pars","parSpiSegNR.txt")        
+
          self.vtVars['modelPath']            = os.path.join(self.vtVars['vissimPath']  , "models","modelCervicalSpine" )
-         self.vtVars['vtID']                 = "7"
+         self.vtVars['vtID']                 = "C07"
          vtMethodsegT= [",Default"]
          vtMethodsgT = ["S.seg" ]
          self.vtVars['vtMethodID']           = "0"
@@ -139,6 +154,36 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['dispViewID']           = "7" #Yellow, sagittal view
          self.vtVars['downSz']               = "160"
          self.vtVars['winOS']                = "False"
+         self.vtVars['ligChk']               = "False"
+         self.vtVars['segNodeCoM']           = "[ 0 , 0 , 0 ]"
+         self.vtVars['croppingLength']       = "[ 80 , 80 , 50 ]"
+         #self.vtVars['croppingLength']       = "[ 109 , 109 , 60 ]" for mri does not work
+         self.vtVars['RSxyz']                = "[ 0.5, 0.5 , 0.5 ]"
+         if (sys.platform == 'win32') or (platform.system()=='Windows'):
+           self.OthersSHA256                 = '9a2ee6a67a190e438a18be811310cbf4eb26b6ad3e00243affa44cc0b26c4393'
+         #endif
+      elif vsExtension == 2: # complete spine C01-L05
+         print("VisSimCommonLogic: initializing global variables for complet Spine:")
+         self.vtVars['othersUniKoWebLink']   = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
+         self.vtVars['othersWebLink']        = "https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
+         self.OthersSHA256                   = 'fbcd25344b649cb3055674ff740be305f0c975781726c353ef11566be1b545c0'
+         self.vtVars['parsPath']             = os.path.join(self.vtVars['vissimPath']  , "pars","parSpiSeg.txt" )
+         self.vtVars['modelPath']            = os.path.join(self.vtVars['vissimPath']  , "models","modelSpine" )
+         self.vtVars['vtID']                 = "7"
+         vtMethodsegT= [",Default"]
+         vtMethodsgT = ["S.seg" ]
+         self.vtVars['vtMethodID']           = "0"
+         self.vtVars['segT']                 = vtMethodsegT[int(self.vtVars['vtMethodID'])]
+         self.vtVars['sgT']                  = vtMethodsgT[int(self.vtVars['vtMethodID'])]
+         self.vtVars['vtPtsLigDir']          = "PtsLig"
+         self.vtVars['vtPtsLigSuff']         = "Lp"
+         self.vtVars['modelLigPtsPath']      =  os.path.join(self.vtVars['modelPath'] , self.vtVars['vtPtsLigDir'])
+         subVarsTemplateFnm                  =  self.vtVars['modelPath'] +","+self.vtVars['vtPtsLigDir']+",simPackSubVars.txt"
+         self.vtVars['subVarsTemplateFnm']   =  os.path.join(*subVarsTemplateFnm.split(","))
+         self.vtVars['dispViewTxt']          = "Yellow"
+         self.vtVars['dispViewID']           = "7" #Yellow, sagittal view
+         self.vtVars['downSz']               = "160"
+         self.vtVars['winOS']                = "False"
          self.vtVars['ligChk']               = "True"
          self.vtVars['segNodeCoM']           = "[ 0 , 0 , 0 ]"
          self.vtVars['croppingLength']       = "[ 80 , 80 , 50 ]"
@@ -146,6 +191,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          if (sys.platform == 'win32') or (platform.system()=='Windows'):
            self.OthersSHA256                 = '9a2ee6a67a190e438a18be811310cbf4eb26b6ad3e00243affa44cc0b26c4393'
          #endif
+
       #endif
       #check if VisSimTools folder is found
       self.checkVisSimTools(self.vtVars,vsExtension)
@@ -171,7 +217,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          # TODO: optimise this part to download only the missing files
          print("      Cochlea Extension is selected")
       elif vsExtension ==1: # CervicalSpine
-         print("      Spine Extension is selected")
+         print("     Cervical Spine Extension is selected")
+      elif vsExtension ==2: # Spine
+          print("    Spine Extension is selected")
       else:
          print("   Wrong extension ID")
          return -1
@@ -188,6 +236,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       if not othersWebLink=="":
          print("      Downloading VisSim Tools  ... ")
          try:
+                pass
+                """   
                 print("      Downloading VisSimTools others ...")
                 vissimZip = os.path.expanduser("~/VisSimToolsTmp.zip")
                 uFile = urlretrieve(othersWebLink,vissimZip)
@@ -198,6 +248,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 #remove the downloaded zip file
                 os.remove(vissimZip)
                 print ("    done! ")
+                """ 
          except Exception as e:
                 print("      Error: can not download and extract VisSimTools ...")
                 print(e)
@@ -302,7 +353,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #'vtkSlicerMarkupsModuleMRMLPython.vtkMRMLMarkupsFiducialNode'
       if not type(ptRAS) =='str':
          #TODO: add option for printing
-         if not i is None:
+         if isinstance(ptRAS,tuple):
+            ras = list(ptRAS)
+         elif not i is None:
             print(i)
             print(type(ptRAS))
             ptRAS.GetNthFiducialPosition(i,ras)
@@ -321,6 +374,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #print("RAS= " + str(ras)+ "   IJK= " + str(ptIJK))
       return  ptIJK
   #enddef
+
 
   #------------------------------------------------------
   #         image2points
@@ -381,7 +435,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
   # Using the location as a center point, we cropp around it using the defined cropLength
   # point must be a string in IJK format e.g. "[190,214,92]"
   # this is useful to call the function from console with some arguments
-  def runCropping(self, inputVolume, pointT,croppingLengthT, samplingLengthT, hrChkT,  vtIDt):
+  def runCropping(self, inputVolume, pointT,croppingLengthT, samplingLengthT, hrChkT,  vtID):
 
         print("================= Begin cropping  ... =====================")
         # Create a temporary node as workaround for bad path or filename
@@ -389,19 +443,19 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         print(" location: " + pointT + "   cropping length: " + str(croppingLengthT) )
         nodeName    = inputVolume.GetName() +"_Crop"
         nodeNameIso = inputVolume.GetName() +"_CropIso"
-        inputCropPath = self.vtVars['vissimPath']+","+nodeName +".nrrd"
+        inputCropPath = self.vtVars['outputPath']+","+nodeName +".nrrd"
         inputCropPath = os.path.join(*inputCropPath.split(","))
-        inputCropIsoPath = self.vtVars['vissimPath']+","+nodeNameIso +".nrrd"
+        inputCropIsoPath = self.vtVars['outputPath']+","+nodeNameIso +".nrrd"
         inputCropIsoPath = os.path.join(*inputCropIsoPath.split(","))
 
         #for Spine
-        if not vtIDt == 0:
-           print("Vertebra "+vtIDt+ " location: " + pointT + "   cropping length: " + str(croppingLengthT) )
-           nodeName    = inputVolume.GetName() +"_C" + vtIDt
-           nodeNameIso = inputVolume.GetName() +"_C" + vtIDt +"_iso"
-           inputCropPath = self.vtVars['vissimPath']+","+nodeName  +".nrrd"
+        if not vtID == 0:
+           print("Vertebra "+vtID+ " location: " + pointT + "   cropping length: " + str(croppingLengthT) )
+           nodeName    = inputVolume.GetName() +"_" + vtID
+           nodeNameIso = inputVolume.GetName() +"_" + vtID +"_iso"
+           inputCropPath = self.vtVars['outputPath']+","+nodeName  +".nrrd"
            inputCropPath = os.path.join(*inputCropPath.split(","))
-           inputCropIsoPath = self.vtVars['vissimPath']+","+nodeNameIso  +".nrrd"
+           inputCropIsoPath = self.vtVars['outputPath']+","+nodeNameIso  +".nrrd"
            inputCropIsoPath = os.path.join(*inputCropIsoPath.split(","))
         #endif
 
@@ -489,7 +543,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
            else:
                #note: in windows, no need to use --launch
-               resamplingCommand = ResampleBinPath + ".exe"
+               resamplingCommand = ResampleBinPath 
            #endtry
            print(resamplingCommand)
            si = None
@@ -529,6 +583,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
   #--------------------------------------------------------------------------------------------
   def runElastix(self, elastixBinPath, fixed, moving, output, parameters, verbose, line):
       print ("************  Compute the Transform **********************")
+      #this is important when use external elastix
+      os.environ['ITK_AUTOLOAD_PATH'] = ''
       currentOS = sys.platform
       print(currentOS)
       Cmd = elastixBinPath + ' -f ' + fixed + ' -m ' +  moving  + ' -out ' +  output + ' -p ' + parameters
@@ -543,8 +599,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
           print(" elastix is running in Linux :) !!!")
           CmdList = Cmd.split()
           print(CmdList)
-          cTI=  subprocess.Popen(CmdList, env=self.elastixEnv,  stdout=subprocess.PIPE, universal_newlines=True)
-          cTI.wait()
+          #cTI=  subprocess.Popen(CmdList, env=self.elastixEnv,  stdout=subprocess.PIPE, universal_newlines=True)
+          cTI=  subprocess.Popen(CmdList,  env=os.environ.copy(),  stdout=subprocess.PIPE, universal_newlines=True)
+          cTI.wait()        
           out, err = cTI.communicate()
           cTI=int(not err==None)
       elif currentOS in ["darwin","os2","os2emx"]:
@@ -572,6 +629,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
   #--------------------------------------------------------------------------------------------
   def runTransformix(self,transformixBinPath, img, output, parameters, verbose, line):
       print ("************  Apply transform **********************")
+      os.environ['ITK_AUTOLOAD_PATH'] = ''
       currentOS = sys.platform
       Cmd = transformixBinPath + ' -tp ' + parameters + ' -in ' +  img  +' -out ' +   output +' -def '+ ' all '
       #if subprocess.mswindows:
@@ -587,7 +645,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
           print(" transformix is running in Linux :) !!!")
           CmdList = Cmd.split()
           print(CmdList)
-          cTS=  subprocess.Popen(CmdList, env=self.elastixEnv,  stdout=subprocess.PIPE, universal_newlines=True)
+          #cTS=  subprocess.Popen(CmdList, env=self.elastixEnv,  stdout=subprocess.PIPE, universal_newlines=True)
+          cTS=  subprocess.Popen(CmdList, env=os.environ.copy(),  stdout=subprocess.PIPE, universal_newlines=True)
           cTS.wait()
           out, err = cTS.communicate()
           cTS=int(not err==None)
@@ -609,6 +668,57 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       return cTS
   #enddef
 
+
+  #--------------------------------------------------------------------------------------------
+  #                        run elxInvertTransform
+  #--------------------------------------------------------------------------------------------
+  def runElxInvertTransform(self,inputTransform, outputTransform, movingImagePath, verbose, line):
+      # only 3D Euler affine supported 
+      print ("************  Apply Invert transform **********************")
+      currentOS = sys.platform
+      Cmd = self.vtVars['elxInvertTransformBinPath']  + ' -tp ' + inputTransform + ' -out ' +   outputTransform+' -m '+ movingImagePath
+      print(Cmd)
+      #if subprocess.mswindows:
+      errStr="No error!"
+#      if hasattr(subprocess, 'mswindows'):
+      if currentOS in ["win32","msys","cygwin"]:
+         print(" elxInvertTransform is running in Windows :( !!!")
+         print(Cmd)
+         si = subprocess.STARTUPINFO()
+         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+         cTS = subprocess.call(Cmd , shell = (sys.platform == currentOS) , startupinfo=si )
+      elif currentOS in ["linux","linux2"]:
+          print(" elxInvertTransform is running in Linux :) !!!")
+          CmdList = Cmd.split()
+          print(Cmd)
+          cTS=  subprocess.Popen(CmdList, env=os.environ.copy(),  stdout=subprocess.PIPE, universal_newlines=True)
+          cTS.wait()
+          out, err = cTS.communicate()
+          cTS=int(not err==None)
+      elif currentOS in ["darwin","os2","os2emx"]:
+          print(" elxInvertTransform is running in Mac :( !!!")
+          CmdList = Cmd.split()
+          print(CmdList)
+          #cTS = os.system(Cmd)
+          cTS=  subprocess.Popen(CmdList, env=os.environ.copy(),  stdout=subprocess.PIPE, universal_newlines=True)
+          cTS.wait()
+          out, err = cTS.communicate()
+          cTS=int(not err==None)
+      else:
+            print(" elxInvertTransform is running in Unknown system :( !!!")
+            cTS=1
+            errStr="elxInvertTransform error at line"+ line +", check the log files"
+      #endif
+      print(cTS)
+      self.chkElxER(cTS,errStr) # Check if errors happen during elastix execution
+      return cTS
+  #enddef
+
+  #--------------------------------------------------------------------------------------------
+  def resizeTransform(self,inputTransformPath, outTransformPath, newSize):
+      pass 
+  #enddef
+
   #--------------------------------------------------------------------------------------------
   #                       Check Elastix error
   #--------------------------------------------------------------------------------------------
@@ -622,8 +732,38 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
             print("done !!!")
         #endif
  #enddef
+  def resampleToReference(self,inputVolumePath,referenceVolumePath,resultVolumePath):
+        SlicerPath      =  os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
+        SlicerBinPath   =  os.path.join(SlicerPath,"Slicer")
+        ResampleBinPath =  os.path.join(SlicerPath,"lib","Slicer-4.10" , "cli-modules","ResampleScalarVectorDWIVolume" )
+        Cmd = SlicerBinPath +" --launch " + ResampleBinPath  + " -R "+referenceVolumePath +" "+inputVolumePath +" "+resultVolumePath+" "
+        print(Cmd)
+        os.system(Cmd)
+  #enddef
 
-
+  def modifyTransform(self,inputTransformPath,outPutTransformPath,referenceVolumePath):
+      print("Modifiying input transform")
+      trfF= open(inputTransformPath,"rw") ;     parsLst = trfF.readlines() ;  trfF.close()
+      #print(parsLst)
+      [success, referenceVolumeNode]       = slicer.util.loadVolume(referenceVolumePath, returnNode = True)
+      fixedSize= referenceVolumeNode.GetImageData().GetDimensions() #[485, 485 , 121]
+      fOrg = referenceVolumeNode.GetOrigin()   #[-30.3125 , -30.3125 , -30.0]      
+      drs =  self.getDirs(referenceVolumeNode) 
+      fixedOrg = [drs[0]*fOrg[0] , drs[4]*fOrg[1] , drs[8]*fOrg[2]]
+      cTR = self.runElxInvertTransform(inputTransformPath, outPutTransformPath, referenceVolumePath, self.vtVars['noOutput'], "710")
+      trfF= open(outPutTransformPath,"w")
+      for l in parsLst:   
+          if ("(Size "   in l):        
+             l = "(Size "   +str(fixedSize[0])+" "+str(fixedSize[1])+" "+str(fixedSize[2])+" )\n"
+          #endif 
+          if ("(Origin " in l):
+             l = "(Origin " +str(fixedOrg[0]) +" "+str(fixedOrg[1]) +" "+str(fixedOrg[2]) +" )\n"
+          #endif 
+          trfF.write(l)
+      trfF.close()
+      print("Done! transform is modified ")
+  #enddef
+  
   def openResultsFolder(self):
       if not hasattr(self, 'vtVars'):
          self.setGlobalVariables(1)
@@ -724,8 +864,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                  os.remove(os.path.join(outputPath,fd,fnm))
               elif  "result" in fnm:
                  os.remove(os.path.join(outputPath,fd,fnm))
-              elif  ".log" in fnm:
-                 os.remove(os.path.join(outputPath,fd,fnm))
+              #elif  ".log" in fnm:
+                 #os.remove(os.path.join(outputPath,fd,fnm))
               elif  "TransformParameters" in fnm:
                  os.remove(os.path.join(outputPath,fd,fnm))
               #endif
@@ -733,18 +873,18 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endfor fd
       vissimPath = self.vtVars['vissimPath']
       cropfiles = os.listdir(vissimPath)
-      try:
-         for fnm in cropfiles:
-             if "Crop" in fnm:
-                 os.remove(os.path.join(vissimPath, fnm))
-             #endif
-             if re.search('[C][1-7]', fnm):
-                 os.remove(os.path.join(vissimPath, fnm))
-             #endif
-         #endfor
-      except Exception as e:
-             print(" Error: can not remove " + fnm)
-             print(e)
+#       try:
+#          for fnm in cropfiles:
+#              if "Crop.nrrd" in fnm:
+#                  os.remove(os.path.join(vissimPath, fnm))
+#              #endif
+#              if re.search('[C][1-7]', fnm):
+#                  os.remove(os.path.join(vissimPath, fnm))
+#              #endif
+#          #endfor
+#       except Exception as e:
+#              print(" Error: can not remove " + fnm)
+#              print(e)
       #endtry
       print("removing temp nodes ...!")
       nodes = slicer.util.getNodesByClass('vtkMRMLScalarVolumeNode')
@@ -801,8 +941,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #endif
    #enddef
 
-  def setVtID(self,idx,inputVolumeNode , inputFiducialNode):
-      self.vtVars['vtID']=str(idx)
+  def setVtID(self,vtID,inputVolumeNode , inputFiducialNode):
+      self.vtVars['vtID']=vtID
       print(self.vtVars['vtID']+ " is selected")
       self.inputVolumeNode = inputVolumeNode
       self.inputFiducialNode = inputFiducialNode
@@ -828,9 +968,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          noPts = self.inputFiducialNode.GetNumberOfFiducials()
          newFid= True
          for j in range (0, noPts):
-             if self.inputFiducialNode.GetNthFiducialLabel(j)==("C"+self.vtVars['vtID']) :
+             if self.inputFiducialNode.GetNthFiducialLabel(j)==(self.vtVars['vtID']) :
                 newFid= False
-                print("C"+self.vtVars['vtID'] +" exist, removing old point at: " +str(j))
+                print(self.vtVars['vtID'] +" exist, removing old point at: " +str(j))
                 #get the new location
                 self.inputFiducialNode.RemoveMarkup(j)
              #endif
@@ -844,9 +984,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
   def setVtIDfromEdt(self,point,vtID):
         # no external call
         #print("no external call, point= " + point)
-        self.vtVars['vtID'] = str(vtID)
+        self.vtVars['vtID'] = vtID
         isExternalCall = False
-        print("point changed,  " + str(vtID) + " is selected")
+        print("point changed,  " + vtID + " is selected")
         #TODO: add option to use point from text for cropping
         return isExternalCall
   #enddef
@@ -949,7 +1089,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          caller.SetNthFiducialLabel(noPts-1, self.FidLabel)
          caller.GetNthFiducialPosition(noPts-1,rasPt)
       else: #Spine
-         caller.SetNthFiducialLabel(noPts-1, "C"+self.vtVars['vtID'])
+         caller.SetNthFiducialLabel(noPts-1, self.vtVars['vtID'])
          caller.GetNthFiducialPosition(noPts-1,rasPt)
       #self.inputPoint = self.vsc.ptRAS2IJK(caller, rasPt,self.inputVolumeNode,noPts-1)
       self.inputPoint = self.ptRAS2IJK( caller,self.inputVolumeNode,noPts-1)
@@ -983,6 +1123,14 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #print("number of rmaining fiducials: " + str(i))
   #endif
 
+  def getDirs(self, imgNode):
+      dM = vtk.vtkMatrix4x4()
+      imgNode.GetIJKToRASDirectionMatrix(dM)
+      imgDirs = np.asarray([dM.GetElement(i,j) for i in range(3) for j in range(3)])
+      return imgDirs
+  #enddef
+
+
   #--------------------------------------------------------------------------------------------
   #                        Calculate Segmentation Information
   #--------------------------------------------------------------------------------------------
@@ -996,8 +1144,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         if vtID == 0:  # Cochlea
            # compute the fiducial length
            segStatLogic.exportToTable(tblNode)
-           tblNode.SetCellText(0,2,self.vtVars['StLength'])
-           tblNode.SetCellText(1,2,"0")
+           #tblNode.SetCellText(0,2,self.vtVars['StLength'])
+           #tblNode.SetCellText(1,2,"0")
         else           :  #Spine
            #  egt volume size of a vertebra
            if tblNode is None:
@@ -1021,8 +1169,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
 
            #remove old row of this vertebra if exists
            for i in range (tblNode.GetNumberOfRows()):
-               if "C"+str(vtID) == tblNode.GetCellText(i,0):
-                  print( "C"+str(vtID) + " table row exists, old values will be removed in row." + str(i))
+               if vtID == tblNode.GetCellText(i,0):
+                  print( vtID + " table row exists, old values will be removed in row." + str(i))
                   tblNode.RemoveRow(i)
                #endif
            #endfor
@@ -1043,7 +1191,11 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            if (vtID ==7) and (self.vtVars['vtMethodID']== "0"): # for testing
               print("updating COM in table ..............")
               segID = segNode.GetSegmentation().GetSegmentIdBySegmentName("C"+str(vtID))
-              modelNode = segNode.GetClosedSurfaceRepresentation(segID)
+              if slicer.app.minorVersion == 10:
+                  modelNode = segNode.GetClosedSurfaceRepresentation(segID)
+              else:
+                  modelNode = vtk.vtkPolyData()
+                  segNode.GetClosedSurfaceRepresentation(segID, modelNode)
               com = vtk.vtkCenterOfMass(); com.SetInputData(modelNode);   com.Update()
               segNodeCoM = com.GetCenter()
               tblNode.SetCellText(idx,2,str(segNodeCoM[0]))
@@ -1067,7 +1219,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
   #                        Calculate length and volume of scalas
   #--------------------------------------------------------------------------------------------
   # This function compute the distance between all the fiducials in a markupnode
-  def getFiducilsDistance(self,markupsNode,tblNode):
+  def getFiducilsDistance(self,markupsNode):
         markupsDistance = 0 ; rasPt0 = [0,0,0] ; rasPt1 = [0,0,0] ;
 
         for i in range(0, markupsNode.GetNumberOfFiducials()):
@@ -1079,13 +1231,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 markupsDistance = markupsDistance +  math.sqrt( (x1-x0)**2 + (y1-y0)**2 + (z1-z0)**2 )
             #endif
         #endfor
-        self.vtVars['StLength'] = str(markupsDistance)
-        if not tblNode is None:
-           tblNode.SetCellText(0,2,self.vtVars['StLength'])
-        #endif
-
         return markupsDistance
   #enddef
+  
   def fitAllSlicesViews(self):
       sliceNodes = slicer.util.getNodes('vtkMRMLSliceNode*')
       layoutManager = slicer.app.layoutManager()
@@ -1140,9 +1288,11 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       self.fitAllSlicesViews()
   #enddef
 
-  def dispSeg(self,inputVolumeNode, vtSegNode, view):
+  def dispSeg(self,inputVolumeNode, vtSegNode, view=None):
         lm = slicer.app.layoutManager();
-        lm.setLayout(view)
+        if (not view is None):
+           lm.setLayout(view)
+        #endif     
         r_logic = lm.sliceWidget("Red").sliceLogic()
         r_cn = r_logic.GetSliceCompositeNode()
         r_cn.SetBackgroundVolumeID(inputVolumeNode.GetID())
@@ -1161,6 +1311,96 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         v3DDWidgetV.zoomIn()
         v3DDWidgetV.zoomFactor =0.05 # back to default value
   #enddef
+
+
+  def comparePoints(self, ptsResultPath , ptsGroundTruthPath):
+      #Get points with their names 
+
+      ptsMSE =0.0
+      #open files
+      pOf= open(ptsGroundTruthPath, "r")
+      pRf= open(ptsResultPath, "r")
+      #read lines after the labels 
+      pODt = list(pOf)[3:] 
+      pRDt = list(pRf)[3:]
+      # get values sorted by the point name
+      pODL = [ x.split(',') for x in pODt] ;    pODL.sort(key=lambda x: x[11]) 
+      pRDL = [ x.split(',') for x in pRDt] ;    pRDL.sort(key=lambda x: x[11]) 
+      pOD = [ float(x[i]) for x in pODL for i in [1,2,3]   ] 
+      pRD = [ float(x[i]) for x in pRDL for i in [1,2,3]   ] 
+
+
+      #TODO: sort based on the name
+      #compute error
+      msdF = lambda x , y : math.sqrt(  (x-y)**2 )  
+      msdV=(np.zeros((len(pOD))))
+      msdV=[msdF( x[0],x[1]) for x in zip(pOD, pRD)]
+      ptsMSE = sum(msdV)/len(pOD)
+      return ptsMSE
+  #enddef
+  def compareSegmentations(self, refPath, segGTpath,segResPath ):
+      # compare all segmentations , reference image is used to get image properties
+      metricResults = 01.0 * np.zeros((8,2))
+      segDCE =0.0 ; segHD = 0.0;
+      # load imgReference
+      [success, Rnode] = slicer.util.loadVolume( refPath, returnNode=True)
+
+      # load imgResult
+      [success, Anode] = slicer.util.loadSegmentation( segResPath, returnNode=True)
+      AlblNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
+      AlblNode.SetName('As')
+      slicer.modules.segmentations.logic().ExportVisibleSegmentsToLabelmapNode(Anode, AlblNode, Rnode)
+      Aimg= sitkUtils.PullVolumeFromSlicer(AlblNode)
+
+      # load imgGroundTruth
+      [success, Bnode] = slicer.util.loadSegmentation( segGTpath, returnNode=True)
+      BlblNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
+      BlblNode.SetName('Bs')
+      slicer.modules.segmentations.logic().ExportVisibleSegmentsToLabelmapNode(Bnode, BlblNode, Rnode)
+      Bimg= sitkUtils.PullVolumeFromSlicer(BlblNode) # check here for BlblNode
+
+      resample = sitk.ResampleImageFilter()
+      resample.SetInterpolator(sitk.sitkLinear)
+      resample.SetOutputDirection(Aimg.GetDirection())
+      resample.SetOutputOrigin(Aimg.GetOrigin())
+      resample.SetOutputSpacing(Aimg.GetSpacing())
+      resample.SetSize(Aimg.GetSize())
+      Bimg = resample.Execute(Bimg)
+        
+      dceF = sitk.LabelOverlapMeasuresImageFilter()
+      hdF = sitk.HausdorffDistanceImageFilter()
+      segDCEc= 0.0
+      segHDc = 0.0
+      #compute for each vertebra 
+      AimgNP = sitk.GetArrayFromImage(Aimg)
+      BimgNP = sitk.GetArrayFromImage(Bimg)
+      for i in range (7):
+          AimgNPc = AimgNP * (AimgNP == i+1)
+          AimgC = sitk.GetImageFromArray(AimgNPc)
+          BimgNPc = BimgNP * (BimgNP == i+1)
+          BimgC = sitk.GetImageFromArray(BimgNPc)
+          
+          dceF.Execute(AimgC,BimgC)
+          segDCEc =dceF.GetDiceCoefficient()
+          # Hausdorf takes longer time
+          # hdF.Execute(AimgC,BimgC) 
+          # segHDc =hdF.GetAverageHausdorffDistance()    
+
+          metricResults[i,0] = segDCEc
+          metricResults[i,1] = segHDc
+          print("C" +str(i+1) + ": DCE= " + str(segDCEc) + "\tHD= " + str(segHDc) )
+          segDCE = segDCE + segDCEc
+          segHD  = segHD  + segHDc
+      #endfor
+      segDCE = segDCE/7.0 
+      segHDc = segHD /7.0
+      metricResults[7,0] = segDCE
+      metricResults[7,1] = segHD
+
+      #print("Total segDCE= %.5f " % segDCE + "Total segHD = %.5f " % segHD)
+      return metricResults
+  #enddef
+
 #endclass 
 
 class VisSimCommonTest(ScriptedLoadableModuleLogic):

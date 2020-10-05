@@ -3,4 +3,6 @@
 build/*
 *.pyc
 *.project
+*.sh
+*.bat
 *.pydevproject
