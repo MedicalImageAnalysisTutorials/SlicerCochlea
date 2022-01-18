@@ -12,6 +12,8 @@ This project contains two modules:
   1. Cochlea image registration.
   2. Cochlea image segmentation and measuerments.
 
+Notice: one can modify the optimiser in elastix parameters to get new results. 
+
 Please cite our papers:
 *  Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Rania Helal, Friedrich Lisseck and Roland Jacob, (2018), Automatic Cochlear Length and Volume Size Estimation, Accepted in: First  International Workshop on Context-Aware Operating Theater OR 2, MICCAI 2018, Granada Spain.[link](https://or20.univ-rennes1.fr/sites/or20.univ-rennes1.fr/files/asset/document/aldhamarietal2018_0.pdf)
 
