@@ -5,7 +5,7 @@
 This is a [3D Slicer](https://gaithub.com/Slicer/Slicer) plugin that uses [elastix toolbox](https://github.com/SuperElastix/elastix) for Multi-modal cochlea Images registration, segmentation and analysis. More information can be found [here](https://mtixnat.uni-koblenz.de). The elastix parameters file can be found [here](http://elastix.bigr.nl/wiki/index.php/Par0053)
 
 **Tested on:**
-Slicer 4.10, Windows 10 and Ubuntu 18.04
+Slicer 4.10.2 [for windows](https://slicer-packages.kitware.com/api/v1/file/60add732ae4540bf6a89c029/download) and [for linux](https://slicer-packages.kitware.com/api/v1/file/60add73aae4540bf6a89c03b/download). Tested on Windows 10 and Ubuntu 18.04
 
 This project contains two modules:
 
