@@ -22,7 +22,7 @@
 #  Updated: 24.6.2019                                                                 # 
 #======================================================================================
 
-import os, time, logging, unittest
+import os,sys, time, logging, unittest
 import numpy as np
 from __main__ import qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
