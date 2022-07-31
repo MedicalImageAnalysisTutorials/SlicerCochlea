@@ -99,6 +99,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       if vsExtension == 0: #0=cochlea
          self.vtVars['othersUniKoWebLink']  = ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")
+         self.vtVars['vissimPath']          = self.vtVars['vissimPath']  
          self.OthersSHA256                  = '763be6b5b11f0f6a3ed73d1a5ef5df34cdbbf46a3e1728195e79e8dcd26313d1'
          self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath'] , "pars","parCochSeg.txt")
          self.vtVars['modelPath']           = os.path.join(self.vtVars['vissimPath'] , "models","modelCochlea")
@@ -197,7 +198,10 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 zip_ref.close()
                 #remove the downloaded zip file
                 os.remove(vissimZip)
-                print ("    done! ")
+                # moved the folder: fix bug related to windows
+                import shutil
+                shutil.move(os.path.join(os.path.expanduser("~/"),"VisSimToolsCochlea","VisSimTools") , os.path.join(os.path.expanduser("~/"),"VisSimTools") )
+                print ("done! ")
          except Exception as e:
                 print("      Error: can not download and extract VisSimTools ...")
                 print(e)
