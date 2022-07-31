@@ -22,7 +22,7 @@
 #  Updated: 24.6.2019                                                                 #
 #======================================================================================
 from __future__ import print_function
-import os, time, unittest, logging
+import os,sys, time, unittest, logging
 from shutil import copyfile
 import numpy as np
 from __main__ import qt, ctk, slicer
