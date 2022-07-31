@@ -197,6 +197,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 zip_ref.close()
                 #remove the downloaded zip file
                 os.remove(vissimZip)
+                # moved the folder: fix bug related to windows
+                import shutil
+                shutil.move(os.path.join(os.path.expanduser("~/"),"VisSimToolsCochlea","VisSimTools") , os.path.join(os.path.expanduser("~/"),"VisSimTools") )                
                 print ("    done! ")
          except Exception as e:
                 print("      Error: can not download and extract VisSimTools ...")
