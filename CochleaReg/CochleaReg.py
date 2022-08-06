@@ -18,16 +18,26 @@
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
-#  Updated: 18.1.2022                                                                 #
+#  Slicer 5.0.3                                                                       #
+#  Updated: 6.8.2022                                                                  #
 #======================================================================================
 
-import os, time, logging, unittest
-import numpy as np
-from __main__ import qt, ctk, slicer
-from slicer.ScriptedLoadableModule import *
-import SampleData
+# Non Slicer libs
+from __future__ import print_function
+import os, sys, time, re, shutil,  math, unittest, logging, zipfile, platform, subprocess, hashlib
+from shutil import copyfile
 
+from six.moves.urllib.request import urlretrieve
+import numpy as np
+import SimpleITK as sitk
+
+# Slicer related
+from __main__ import vtk, qt, ctk, slicer
+from slicer.ScriptedLoadableModule import *
+import sitkUtils
+import SampleData
+import SegmentStatistics
+import Elastix
 import VisSimCommon
 
 # TODO:
@@ -37,7 +47,7 @@ import VisSimCommon
 # Terminology
 #  img         : ITK image
 #  imgNode     : Slicer Node
-#  imgName     :  Filename without the path and without extension
+#  imgName     : Filename without the path and without extension
 #  imgPath     : wholePath + Filename and extension
 
 
@@ -50,14 +60,7 @@ class CochleaReg(ScriptedLoadableModule):
         parent.title = "Cochlea Registration"
         parent.categories = ["VisSimTools"]
         parent.dependencies = []
-        parent.contributors = [
-                               "Christopher Guy",
-                               "Ibraheem Al-Dhamari",
-                               "Michel Peltriauxe",
-                               "Anna Gessler",
-                               "Jasper Grimmig",
-                               "Pepe Eulzer"
-         ]
+        parent.contributors = ["Ibraheem Al-Dhamari"]                              
         parent.helpText            = " This module uses ACIR method to auatomatically register cochlea images"
         parent.acknowledgementText = " This work is sponsored by Cochlear as part of COMBS project "
         self.parent = parent
@@ -71,7 +74,7 @@ class CochleaRegWidget(ScriptedLoadableModuleWidget):
   def setup(self):
     print(" ")
     print("=======================================================")
-    print("   Automatic Cochlea Image Registration                ")
+    print("   Automatic Cochlea Image Registration and Fusion     ")
     print("=======================================================")
 
     ScriptedLoadableModuleWidget.setup(self)
@@ -310,11 +313,11 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
 
       print("=================== Cropping =====================")
       self.vsc.vtVars['fixedCropPath'] = self.vsc.runCropping(fixedVolumeNode, fixedPointT,self.vsc.vtVars['croppingLength'],  self.vsc.vtVars['RSxyz'],  self.vsc.vtVars['hrChk'],0)
-      [success, croppedFixedNode] = slicer.util.loadVolume(self.vsc.vtVars['fixedCropPath'], returnNode=True)
+      [success, croppedFixedNode] = slicer.util.loadVolume(self.vsc.vtVars['fixedCropPath'])
       croppedFixedNode.SetName(fixedVolumeNode.GetName()+"_F_Crop")
 
       self.vsc.vtVars['movingCropPath'] = self.vsc.runCropping(movingVolumeNode, movingPointT,self.vsc.vtVars['croppingLength'],  self.vsc.vtVars['RSxyz'],  self.vsc.vtVars['hrChk'],0)
-      [success, croppedMovingNode] = slicer.util.loadVolume(self.vsc.vtVars['movingCropPath'], returnNode=True)
+      [success, croppedMovingNode] = slicer.util.loadVolume(self.vsc.vtVars['movingCropPath'])
       croppedMovingNode.SetName(movingVolumeNode.GetName()+"_M_Crop")
       print ("************  Register cropped moving image to cropped fixed image **********************")
       cTI = self.vsc.runElastix(self.vsc.vtVars['elastixBinPath'],self.vsc.vtVars['fixedCropPath'],  self.vsc.vtVars['movingCropPath'], self.vsc.vtVars['outputPath'], self.vsc.vtVars['parsPath'], self.vsc.vtVars['noOutput'], "336")
@@ -325,7 +328,7 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       os.rename(resOldDefPath,resDefPath)
 
       print ("************  Load deformation field Transform  **********************")
-      [success, vtTransformNode] = slicer.util.loadTransform(resDefPath, returnNode = True)
+      [success, vtTransformNode] = slicer.util.loadTransform(resDefPath)
       vtTransformNode.SetName(transNodeName)
       print ("************  Transform The Original Moving image **********************")
       movingVolumeNode.SetAndObserveTransformNodeID(vtTransformNode.GetID())
@@ -333,11 +336,11 @@ class CochleaRegLogic(ScriptedLoadableModuleLogic):
       slicer.vtkSlicerTransformLogic().hardenTransform(movingVolumeNode)     # apply the transform
       fnm = os.path.join(self.vsc.vtVars['outputPath'] , movingVolumeNode.GetName()+"_Registered.nrrd")
       sR = slicer.util.saveNode(movingVolumeNode, fnm )
-      [success, registeredMovingVolumeNode] = slicer.util.loadVolume(fnm, returnNode = True)
+      [success, registeredMovingVolumeNode] = slicer.util.loadVolume(fnm)
       registeredMovingVolumeNode.SetName(movingVolumeNode.GetName()+"_Registered")
       #remove the tempnode and load the original
       slicer.mrmlScene.RemoveNode(movingVolumeNode)
-      [success, movingVolumeNode] = slicer.util.loadVolume(movingPath, returnNode = True)
+      [success, movingVolumeNode] = slicer.util.loadVolume(movingPath)
       movingVolumeNode.SetName(os.path.splitext(os.path.basename(movingVolumeNode.GetStorageNode().GetFileName()))[0])
       if  (cTI==0) and (cTR==0):
           print("No error is reported during registeration ...")

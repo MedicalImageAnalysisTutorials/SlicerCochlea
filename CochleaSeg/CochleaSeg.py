@@ -18,45 +18,34 @@
 #  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11.0                                                                      #
-#  Updated: 24.6.2019                                                                 #
+#  Slicer 5.0.3                                                                       #
+#  Updated: 6.8.2022                                                                #
 #======================================================================================
+# Non Slicer libs
 from __future__ import print_function
-import os,sys, time, unittest, logging
+import os, sys, time, re, shutil,  math, unittest, logging, zipfile, platform, subprocess, hashlib
 from shutil import copyfile
-import numpy as np
-from __main__ import qt, ctk, slicer
-from slicer.ScriptedLoadableModule import *
-import SampleData
 
+from six.moves.urllib.request import urlretrieve
+import numpy as np
+import SimpleITK as sitk
+
+# Slicer related
+from __main__ import vtk, qt, ctk, slicer
+from slicer.ScriptedLoadableModule import *
+import sitkUtils
+import SampleData
+import SegmentStatistics
+import Elastix
 import VisSimCommon
 
-#TODO:
-
-# 1. solve right model problem:
-#    - it seems hardening transform does not work after loading the segmentation. Slicer crashes.
-#      with error : Failed to get reference image geometry
-#    - the problem above solved by exporting to label with model as reference then export to .seg.
-#      but still we have bad results. More testing is needed.
-# 2. cleaning, removing temp nodes and files
-# 3. add alternative links for models and sample images.
-# 4. local testing with different machines.
-
-# Later:
-# - Checking if all above are needed
-# - Cleaning, optimizing, commenting.
-# - Testing in both Windows and Linux.
-# - Supporting DICOM.
-# - Supporting illegal filename.
-# - Add alternative to use elastix binaries directly by downloading the binary release.
-# - Visualizing the interimediate steps.
-#
-#
-#
+# TODOS:
+# Update the models 
+ 
 # Terminology
 #  img         : ITK image
 #  imgNode     : Slicer Node
-#  imgName     :  Filename without the path and without extension
+#  imgName     : Filename without the path and without extension
 #  imgPath     : wholePath + Filename and extension
 
 #===================================================================
@@ -69,13 +58,7 @@ class CochleaSeg(ScriptedLoadableModule):
         parent.title = "Cochlea Segmentation"
         parent.categories = ["VisSimTools"]
         parent.dependencies = []
-        parent.contributors = ["Christopher Guy",
-                               "Ibraheem Al-Dhamari",
-                               "Michel Peltriauxe",
-                               "Anna Gessler",
-                               "Jasper Grimmig",
-                               "Pepe Eulzer"
-         ]
+        parent.contributors = ["Ibraheem Al-Dhamari"]
         self.parent.helpText += self.getDefaultModuleDocumentationLink()
         parent.acknowledgementText = " This work is sponsored by Cochlear as part of COMBS project "
         self.parent = parent
@@ -91,7 +74,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
   def setup(self):
     print(" ")
     print("=======================================================")
-    print("   Automatic Cochlea Image Segmentation               ")
+    print("   Automatic Cochlea Image Segmentation and Analysis   ")
     print("=======================================================")
 
     ScriptedLoadableModuleWidget.setup(self)
@@ -323,10 +306,10 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
       # rename fthe file:
       os.rename(resOldDefPath,resDefPath)
       print ("************  Load deformation field Transform  **********************")
-      [success, vtTransformNode] = slicer.util.loadTransform(resDefPath, returnNode = True)
+      vtTransformNode = slicer.util.loadTransform(resDefPath)
       vtTransformNode.SetName(transNodeName)
       print ("************  Transform The Segmentation **********************")
-      [success, vtSegNode] = slicer.util.loadSegmentation(modelSegPath, returnNode = True)
+      vtSegNode = slicer.util.loadSegmentation(modelSegPath)
       vtSegNode.SetName(segNodeName)
       vtSegNode.SetAndObserveTransformNodeID(vtTransformNode.GetID())
       #export seg to lbl then export back with input image as reference
@@ -336,10 +319,9 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
       sR = slicer.util.saveNode(vtSegNode, fnm )
 
       print ("************  Transform The Scala Points **********************")
-      #TODO:check the right side model
-      #TODO:add scala vestibuli model
       # transform the Scala Tympani Points for length Computation
-      [success, vtImgStNode] = slicer.util.loadMarkupsFiducialList  (modelImgStPath, returnNode = True)
+      vtImgStNode = slicer.util.loadMarkupsFiducialList (modelImgStPath, returnNode=True)
+
       vtImgStNode.GetDisplayNode().SetSelectedColor(1,0,0)
       vtImgStNode.GetDisplayNode().SetTextScale(0.5)
       vtImgStNode.SetName(stpNodeName)

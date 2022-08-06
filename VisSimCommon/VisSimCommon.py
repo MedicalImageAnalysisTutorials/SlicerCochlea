@@ -6,8 +6,8 @@
 #  [1] https://www.slicer.org                                                         #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 4.11                                                                        #
-#  Updated: 18.1.2022                                                                 #
+#  Slicer 5.0.3                                                                       #
+#  Updated: 6.8.2022                                                                 #
 #-------------------------------------------------------------------------------------#
 #TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
 #-------------------------------------------------------------------------------------#
@@ -22,16 +22,21 @@
 #          slicer.util.reloadScriptedModule("VisSimCommon")
 #       slicer.util.reloadScriptedModule(self.moduleName)
 #======================================================================================
+
+# Non Slicer libs
 from __future__ import print_function
-import os, re, sys, math, unittest, logging, zipfile, platform, subprocess, hashlib
+import os, sys, time, re, shutil,  math, unittest, logging, zipfile, platform, subprocess, hashlib
+from shutil import copyfile
+
 from six.moves.urllib.request import urlretrieve
 import numpy as np
 import SimpleITK as sitk
-import sitkUtils
+
+# Slicer related
 from __main__ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
+import sitkUtils
 import SampleData
-
 import SegmentStatistics
 import Elastix
 
@@ -43,6 +48,7 @@ class VisSimCommon(ScriptedLoadableModule):
         ScriptedLoadableModule.__init__(self, parent)
         parent.title = "VisSim Common"
         parent.categories = ["VisSimTools"]
+        parent.contributors = ["Ibraheem Al-Dhamari"]
         self.parent = parent
   #enddef
 #endclass
@@ -97,7 +103,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       slicer.mrmlScene.AddDefaultNode(msn)
 
       if vsExtension == 0: #0=cochlea
-         self.vtVars['othersUniKoWebLink']  = ("https://cloud.uni-koblenz-landau.de/s/XYXPb4Fepms2JeC/download")
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")
          self.OthersSHA256                  = '763be6b5b11f0f6a3ed73d1a5ef5df34cdbbf46a3e1728195e79e8dcd26313d1'
          self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath'] , "pars","parCochSeg.txt")
@@ -117,7 +122,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       #Only for Cervical Spine
       elif vsExtension == 1: # Cervical Spine
          print("VisSimCommonLogic: initializing global variables:")
-         self.vtVars['othersUniKoWebLink']   = "https://cloud.uni-koblenz-landau.de/s/yfwcdymS9QfqKc9/download"
          self.vtVars['othersWebLink']        = "https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCervicalSpine.zip"
          self.OthersSHA256                   = 'fbcd25344b649cb3055674ff740be305f0c975781726c353ef11566be1b545c0'
          self.vtVars['parsPath']             = os.path.join(self.vtVars['vissimPath']  , "pars","parSpiSeg.txt" )
@@ -193,13 +197,14 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 uFile = urlretrieve(othersWebLink,vissimZip)
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
-                zip_ref.extractall(os.path.expanduser("~/"))
+                zip_ref.extract(os.path.expanduser("~/"))
                 zip_ref.close()
                 #remove the downloaded zip file
                 os.remove(vissimZip)
                 # moved the folder: fix bug related to windows
-                import shutil
-                shutil.move(os.path.join(os.path.expanduser("~/"),"VisSimToolsCochlea","VisSimTools") , os.path.join(os.path.expanduser("~/"),"VisSimTools") )                
+                # TODO: bug related to slicer, it works in python interactor but not in the extension
+                shutil.move(os.path.join(os.path.expanduser("~/"),"VisSimToolsCochlea","VisSimTools") , os.path.expanduser("~/") )                
+                os.rmdir(os.path.join(os.path.expanduser("~/"),"VisSimToolsCochlea"))
                 print ("    done! ")
          except Exception as e:
                 print("      Error: can not download and extract VisSimTools ...")
@@ -444,12 +449,12 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         #endfor
         croppingBounds = [lower,upper]
         # Call SimpleITK CropImageFilter
-        print("Cropping with " + str(croppingBounds[0]) + " and " + str(croppingBounds[1]) + ".")
-        #self.inputCropPath = "bla blaa blaaa"
-
         inputImage = sitkUtils.PullVolumeFromSlicer(inputVolume.GetID())
         cropper = sitkUtils.sitk.CropImageFilter()
-        croppedImage = cropper.Execute(inputImage, croppingBounds[0], croppingBounds[1])
+        cropper.SetLowerBoundaryCropSize(croppingBounds[0])
+        cropper.SetUpperBoundaryCropSize(croppingBounds[1])
+        print("Cropping with " + str(croppingBounds[0]) + " and " + str(croppingBounds[1]) + ".")
+        croppedImage = cropper.Execute(inputImage)
         # Make a node with cropped image
         sitkUtils.PushVolumeToSlicer(croppedImage, None, nodeName , 'vtkMRMLScalarVolumeNode' )
         crNodes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
