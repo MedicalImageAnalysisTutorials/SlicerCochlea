@@ -4,18 +4,12 @@
 #  Sample cochlea datasets can be downloaded using Slicer Datastore module            #
 #                                                                                     #
 #  Contributers:                                                                      #
-#      - Christopher L. Guy,   guycl@vcu.edu              : Original source code.     #
-#      - Ibraheem Al-Dhamari,  idhamari@uni-koblenz.de    : Plugin design.            #
-#      - Michel Peltriaux,     mpeltriaux@uni-koblenz.de  : Programming & testing.    #
-#      - Anna Gessler,         agessler@uni-koblenz.de    : Programming & testing.    #
-#      - Jasper Grimmig        jgrimmig@uni-koblenz.de    : Programming & testing.    #
-#      - Pepe Eulzer           eulzer@uni-koblenz.de      : Programming & testing.    #
+#      - Ibraheem Al-Dhamari,  idhamari@uni-koblenz.de                                #
 #  [1] https://www.slicer.org                                                         #
 #  [2] http://elastix.isi.uu.nl                                                       #
 #  [3] Al-Dhamari et al., (2017): ACIR: automatic cochlea image registration.         #
 #      In: Proceedings SPIE Medical Imaging 2017: Image Processing;. SPIE. Bd.        #
 #          10133. S. 10133p1-10133p5                                                  #
-#  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 5.0.3                                                                       #

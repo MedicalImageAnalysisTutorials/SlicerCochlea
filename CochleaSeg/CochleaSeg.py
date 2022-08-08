@@ -4,18 +4,12 @@
 #  Sample cochlea datasets can be downloaded using Slicer Datastore module            #
 #                                                                                     #
 #  Contributers:                                                                      #
-#      - Christopher L. Guy,   guycl@vcu.edu              : Original source code.     #
 #      - Ibraheem Al-Dhamari,  idhamari@uni-koblenz.de    : Plugin design.            #
-#      - Michel Peltriaux,     mpeltriaux@uni-koblenz.de  : Programming & testing.    #
-#      - Anna Gessler,         agessler@uni-koblenz.de    : Programming & testing.    #
-#      - Jasper Grimmig        jgrimmig@uni-koblenz.de    : Programming & testing.    #
-#      - Pepe Eulzer           eulzer@uni-koblenz.de      : Programming & testing.    #
 #  [1] https://www.slicer.org                                                         #
 #  [2] http://elastix.isi.uu.nl                                                       #
 #  [3] Al-Dhamari et al.,(2018), Automatic Cochlear Length and Volume Size Estimation #
 #       First  International Workshop on Context-Aware Operating                      #
 #       Theater OR 2, MICCAI 2018, Granada Spain.                                     #
-#  [4] https://mtixnat.uni-koblenz.de                                                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 5.0.3                                                                       #

@@ -2,7 +2,7 @@
 #  3D Slicer [1] common functions used by VisSim extensions                           #
 #                                                                                     #
 #  Contributers:                                                                      #
-#      - Ibraheem Al-Dhamari,  idhamari@uni-koblenz.de    : Plugin design.            #
+#      - Ibraheem Al-Dhamari,  idhamari@uni-koblenz.de                                #
 #  [1] https://www.slicer.org                                                         #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
@@ -11,8 +11,9 @@
 #-------------------------------------------------------------------------------------#
 #TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
 #-------------------------------------------------------------------------------------#
-# this file can be updated andreload automatically when call dependant module by      #
-# modifing bin/python/slicer/ScriptedLoadableModule.py                                #
+
+# This file can be updated and reload automatically when call dependant module by     
+# modifing bin/python/slicer/ScriptedLoadableModule.py                                
 #    def onReload(self):
 #       .
 #       .
@@ -21,7 +22,7 @@
 #          print("Reloading VisSimCommon ............")
 #          slicer.util.reloadScriptedModule("VisSimCommon")
 #       slicer.util.reloadScriptedModule(self.moduleName)
-#======================================================================================
+
 
 # Non Slicer libs
 from __future__ import print_function
