@@ -105,7 +105,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
 
       if vsExtension == 0: #0=cochlea
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")
-         self.OthersSHA256 = "3964baf33b2978c452a858f3647a7ac95e09d5dfb83a73faef88d027a75b03cb"
+         self.OthersSHA256 = "645e55b1f4ffcfdd5cf4722e89e51eb53a72a146986164a53c7d490c9a544881"
          self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath'] ,   "pars","parCochSeg.txt")
          self.vtVars['parsNRPath']          = os.path.join(self.vtVars['vissimPath'] , "pars","parCochSegNR.txt")        
          self.vtVars['modelPath']           = os.path.join(self.vtVars['vissimPath'] , "models","modelCochlea")
@@ -125,7 +125,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['dispViewTxt']         = "Green"
          self.vtVars['dispViewID']          = "8" #Green, coronal view
          if (sys.platform == 'win32') or (platform.system()=='Windows'):
-           self.OthersSHA256                = '9a2ee6a67a190e438a18be811310cbf4eb26b6ad3e00243affa44cc0b26c4393'
+           self.OthersSHA256                = '645e55b1f4ffcfdd5cf4722e89e51eb53a72a146986164a53c7d490c9a544881'
       #Only for Cervical Spine
       elif vsExtension == 1: # Cervical Spine
          print("VisSimCommonLogic: initializing global variables:")
@@ -205,8 +205,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 os.remove(vissimZip)
                 # moved the folder: fix bug related to windows
                 # TODO: bug related to slicer, it works in python interactor but not in the extension
-                shutil.move(os.path.join(os.path.expanduser("~/"),"VisSimToolsCochlea","VisSimTools") , os.path.expanduser("~/") )                
-                os.rmdir(os.path.join(os.path.expanduser("~/"),"VisSimToolsCochlea"))
+                shutil.move(os.path.join(os.path.expanduser("~/"),"VisSimToolsCochlea") , os.path.join(os.path.expanduser("~/"),"VisSimTools") )                
                 print ("    done! ")
          except Exception as e:
                 print("      Error: can not download and extract VisSimTools ...")
