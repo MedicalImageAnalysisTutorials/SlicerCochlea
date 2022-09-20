@@ -2,18 +2,17 @@
 #  3D Slicer [1] common functions used by VisSim extensions                           #
 #                                                                                     #
 #  Contributers:                                                                      #
-#      - Ibraheem Al-Dhamari,  idhamari@uni-koblenz.de                                #
+#      - Ibraheem Al-Dhamari, ibraheem.al-dhamari@chaite.de                           #
 #  [1] https://www.slicer.org                                                         #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
 #  Slicer 5.0.3                                                                       #
-#  Updated: 6.8.2022                                                                 #
+#  Updated: 20.9.2022                                                                 #
 #-------------------------------------------------------------------------------------#
 #TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
 #-------------------------------------------------------------------------------------#
-
-# This file can be updated and reload automatically when call dependant module by     
-# modifing bin/python/slicer/ScriptedLoadableModule.py                                
+# this file can be updated andreload automatically when call dependant module by      #
+# modifing bin/python/slicer/ScriptedLoadableModule.py                                #
 #    def onReload(self):
 #       .
 #       .
@@ -22,10 +21,10 @@
 #          print("Reloading VisSimCommon ............")
 #          slicer.util.reloadScriptedModule("VisSimCommon")
 #       slicer.util.reloadScriptedModule(self.moduleName)
-
+#======================================================================================
 
 # Non Slicer libs
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import os, sys, time, re, shutil,  math, unittest, logging, zipfile, platform, subprocess, hashlib
 from shutil import copyfile
 
@@ -51,17 +50,20 @@ class VisSimCommon(ScriptedLoadableModule):
         parent.categories = ["VisSimTools"]
         parent.contributors = ["Ibraheem Al-Dhamari"]
         self.parent = parent
-  #enddef
-#endclass
 
+#===================================================================
+#                           Widget Class
+#===================================================================
 class VisSimCommonWidget(ScriptedLoadableModuleWidget):
   def setup(self):
       ScriptedLoadableModuleWidget.setup(self)
       self.mainCollapsibleBtn = ctk.ctkCollapsibleButton()
       self.mainCollapsibleBtn.text = "VisSim Common"
       self.layout.addWidget(self.mainCollapsibleBtn)
-  #enddef
 
+#===================================================================
+#                           Logic Class
+#===================================================================
 class VisSimCommonLogic(ScriptedLoadableModuleLogic):
 
   ElastixLogic = Elastix.ElastixLogic()
@@ -72,7 +74,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
   def tstSum(self, x,y):
       print("testing")
       return x+y
-  #enddef
 
   # vsExtension = 0: Cochlea, vsExtension = 1: Spine
   def setGlobalVariables(self,vsExtension):
@@ -91,7 +92,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['transformixBinPath']   = os.path.join(self.ElastixBinFolder, "transformix.exe")
          #self.vtVars['noOutput']             = " >> /dev/null"
          self.vtVars['winOS']                     = "True"
-      #endif
       self.vtVars['noOutput']             = " >> /dev/null"
       self.vtVars['outputPath']           = os.path.join(self.vtVars['vissimPath'],"outputs")
       self.vtVars['imgType']              = ".nrrd"
@@ -105,8 +105,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
 
       if vsExtension == 0: #0=cochlea
          self.vtVars['othersWebLink']       = ("https://github.com/MedicalImageAnalysisTutorials/VisSimData/raw/master/VisSimToolsCochlea.zip")
-         self.OthersSHA256                  = '763be6b5b11f0f6a3ed73d1a5ef5df34cdbbf46a3e1728195e79e8dcd26313d1'
-         self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath'] , "pars","parCochSeg.txt")
+         self.OthersSHA256 = "3964baf33b2978c452a858f3647a7ac95e09d5dfb83a73faef88d027a75b03cb"
+         self.vtVars['parsPath']            = os.path.join(self.vtVars['vissimPath'] ,   "pars","parCochSeg.txt")
+         self.vtVars['parsNRPath']          = os.path.join(self.vtVars['vissimPath'] , "pars","parCochSegNR.txt")        
          self.vtVars['modelPath']           = os.path.join(self.vtVars['vissimPath'] , "models","modelCochlea")
          self.vtVars['downSz']              = "500"
          self.vtVars['inputPoint']          = "[0,0,0]" # initial poisition = no position
@@ -114,12 +115,17 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['RSxyz']               = "[ 0.125, 0.125 , 0.125 ]"  #Resampling parameters
          self.vtVars['dispViewTxt']         = "Green"
          self.vtVars['cochleaSide']         = "L" # default cochlea side is left
-         self.vtVars['StLength']            = "0" # initial scala tympani length
+         self.vtVars['StLength']            = "0" # initial scala tympani central length
+         self.vtVars['SvLength']            = "0" # initial scala vestibuli central length 
+         self.vtVars['StLtLength']          = "0" # initial scala tympani lateral wall length
+         self.vtVars['StOcLength']          = "0" # initial cochlea organ of corti length
+         self.vtVars['AvalueDistance']      = "0" # initial A-value length 
+         self.vtVars['AvalueStLtLength']    = "0" # initial scala tympani lateral wall length using A-value 
+         self.vtVars['AvalueStOcLength']    = "0" # initial cochlea organ of corti length  using A-value
          self.vtVars['dispViewTxt']         = "Green"
          self.vtVars['dispViewID']          = "8" #Green, coronal view
          if (sys.platform == 'win32') or (platform.system()=='Windows'):
-           self.OthersSHA256                = 'd4c6c859b712e963cd7c115413d50e314092d3beae1cede5225fc7552d02804a'
-        #endif
+           self.OthersSHA256                = '9a2ee6a67a190e438a18be811310cbf4eb26b6ad3e00243affa44cc0b26c4393'
       #Only for Cervical Spine
       elif vsExtension == 1: # Cervical Spine
          print("VisSimCommonLogic: initializing global variables:")
@@ -150,13 +156,10 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          self.vtVars['RSxyz']                = "[ 0.5, 0.5 , 0.5 ]"
          if (sys.platform == 'win32') or (platform.system()=='Windows'):
            self.OthersSHA256                 = '9a2ee6a67a190e438a18be811310cbf4eb26b6ad3e00243affa44cc0b26c4393'
-         #endif
-      #endif
       #check if VisSimTools folder is found
       self.checkVisSimTools(self.vtVars,vsExtension)
 
       return self.vtVars
-  #enddef
 
 
   def checkVisSimTools(self,vtVars,vsExtension ):
@@ -180,7 +183,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       else:
          print("   Wrong extension ID")
          return -1
-      #endif
       # check if model files exist
       if  (os.path.exists(vtVars['modelPath'])) and (self.chkSHA256Sum(vtVars['modelPath'], self.OthersSHA256)):
           print("      Model folder is found..." )
@@ -189,7 +191,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       else:
           print("      Models or contents are wrong, trying to download ..." )
           othersWebLink = vtVars['othersWebLink']
-      #endif
       if not othersWebLink=="":
          print("      Downloading VisSim Tools  ... ")
          try:
@@ -198,7 +199,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 uFile = urlretrieve(othersWebLink,vissimZip)
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
-                zip_ref.extract(os.path.expanduser("~/"))
+                zip_ref.extractall(os.path.expanduser("~/"))
                 zip_ref.close()
                 #remove the downloaded zip file
                 os.remove(vissimZip)
@@ -211,8 +212,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 print("      Error: can not download and extract VisSimTools ...")
                 print(e)
                 return -1
-       #end try-except
-  #enddef
 
   def chkSHA256Sum(self, folderPath, sha256Sum):
       sha256_hash = hashlib.sha256()
@@ -228,29 +227,21 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                   sha256_hash.update(hashlib.sha256(buf).hexdigest())
                else                           :  #Python3
                   sha256_hash.update(hashlib.sha256(buf).digest())
-               #endif
-            #endwhile
             f1.close()
-        #endfor names
-      #endforroot
       sha256computedCheckSum = sha256_hash.hexdigest()
       updatedModel = False
       print("      sha256computedCheckSum: " +sha256computedCheckSum)
       if sha256computedCheckSum == sha256Sum:
          updatedModel = True
-      #endif
       return updatedModel
-  #enddef
 
   # string to boolean converter
   def s2b(self,s):
         return s.lower() in ("yes", "true", "t", "1")
-  #enddef
 
   #convert a vector to text
   def v2t(self,v):
       return  "["+str(v[0])+","+str(v[1])+","+str(v[2])+"]"
-  #enddef
 
   #convert dictonary text to vector
   def t2v(self,txt):
@@ -261,7 +252,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       for i in range(3):
           vector[i] =float(t[i])
       return vector
-  #enddef
 
 #------------------------------------------------------
 #                  IJK to RAS
@@ -289,8 +279,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         #endif
 
         return  ptRAS
-
-
 
 #------------------------------------------------------
 #                 RAS  to IJK
@@ -329,7 +317,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       ptIJK = ptIJKf.astype(np.int64)
       #print("RAS= " + str(ras)+ "   IJK= " + str(ptIJK))
       return  ptIJK
-  #enddef
 
   #------------------------------------------------------
   #         image2points
@@ -360,7 +347,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                ptsIJK[j][0:3] =[ x ,y, z ]
                ptsIJKtmp[j][0:3]   =[ x ,y, z ]
                ptsIJKtmp[j][3]     = tmpImgArray[z][y][x]
-        #end for
 
         ptsIJKtmp=  sorted(ptsIJKtmp, key = lambda t: t[-1])
 
@@ -373,7 +359,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            ptsRAS[j]=  self.ptIJK2RAS(ptsIJK[j],inputImgNode)
            x = ptsRAS[j][0]; y = ptsRAS[j][1] ; z = ptsRAS[j][2]
            self.markupsNode.AddFiducial(x,y,z)
-        #endfor
 
         # get the file name at the first of the plugin
         # this keeps the fiducials with short name
@@ -412,7 +397,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            inputCropPath = os.path.join(*inputCropPath.split(","))
            inputCropIsoPath = self.vtVars['vissimPath']+","+nodeNameIso  +".nrrd"
            inputCropIsoPath = os.path.join(*inputCropIsoPath.split(","))
-        #endif
 
         croppingLength =   self.t2v(croppingLengthT)
         samplingLength =   self.t2v(samplingLengthT)
@@ -446,8 +430,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
             #endif
             if upper[i] > dimensions[i]:
                    upper[i] = int(dimensions[i])
-            #endif
-        #endfor
         croppingBounds = [lower,upper]
         # Call SimpleITK CropImageFilter
         inputImage = sitkUtils.PullVolumeFromSlicer(inputVolume.GetID())
@@ -463,8 +445,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
             if nodeName in f.GetName():
                  f.SetName(nodeName)
                  break
-            #endif
-        #endfor
         croppedNode = slicer.util.getNode(nodeName)
         print("cropped:     "+inputCropPath)
         slicer.util.saveNode( croppedNode, inputCropPath)
@@ -499,7 +479,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            else:
                #note: in windows, no need to use --launch
                resamplingCommand = ResampleBinPath + ".exe"
-           #endtry
            print(resamplingCommand)
            si = None
            currentOS = sys.platform
@@ -521,17 +500,14 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
               cRs = subprocess.call(Cmd , shell = (sys.platform == currentOS) , startupinfo=si )
            #endif
 
-
            #inputCropPath = inputCropIsoPath
            print(" Cropping and resampling are done !!! ")
-        #endif
 
         #inputCropPath    = inputCropPath.strip("'")
         print(" Cropped image is saved in : [%s]" % inputCropPath)
         print(" Cropping is done !!! ")
         # so we can remove these files later
         return inputCropPath
-  #enddef
 
   #--------------------------------------------------------------------------------------------
   #                        run elastix
@@ -574,7 +550,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       self.chkElxER(cTI,errStr) # Check if errors happen during elastix execution
 
       return cTI
-  #enddef
 
   #--------------------------------------------------------------------------------------------
   #                        run transformix
@@ -612,11 +587,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
             print(" elastix is running in Unknown system :( !!!")
             cTS=1
             errStr="transformix error at line"+ line +", check the log files"
-      #endif
       print(cTS)
       self.chkElxER(cTS,errStr) # Check if errors happen during elastix execution
       return cTS
-  #enddef
 
   #--------------------------------------------------------------------------------------------
   #                       Check Elastix error
@@ -629,9 +602,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            return False
         else:
             print("done !!!")
-        #endif
- #enddef
-
 
   def openResultsFolder(self):
       if not hasattr(self, 'vtVars'):
@@ -647,8 +617,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          cmd = os.system('open ' + self.vtVars['outputPath'])
       else:
          print("uknown system")
-      #endif
-  #enddef
 
   # segmenteditor effect on the resulted segmentations
   # this function is called by functions like doSmoothing and doMargining
@@ -693,11 +661,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                effect = segEditorW.activeEffect()
                effect.setParameter("MarginSizeMm", MarginSizeMm)
                effect.self().onApply()
-           #endfor
            # Clean up
            segEditorW = None
            slicer.mrmlScene.RemoveNode(segEditorN)
-  #enddef
 
   def removeOtputsFolderContents(self):
       try:
@@ -705,13 +671,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
               filePath = os.path.join(self.vtVars['outputPath'], file)
               if os.path.isfile(filePath):
                  os.remove(filePath)
-             #endif
-          #endfor
       except Exception as e:
             print("nothing to delete ...")
             print(e)
-       #endtry
-  #enddefr
 
   def removeTmpsFiles(self):
       #remove old files
@@ -722,8 +684,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       for fd in outoutputFolders:
           if os.path.isdir(os.path.join(outputPath,fd)):
              fds.append(fd)
-          #endif
-      #endfor
       fds.append(".")
       for fd in fds:
           print(os.path.join(outputPath,fd) )
@@ -737,24 +697,17 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                  os.remove(os.path.join(outputPath,fd,fnm))
               elif  "TransformParameters" in fnm:
                  os.remove(os.path.join(outputPath,fd,fnm))
-              #endif
-          #endfor fnm
-      #endfor fd
       vissimPath = self.vtVars['vissimPath']
       cropfiles = os.listdir(vissimPath)
       try:
          for fnm in cropfiles:
              if "Crop" in fnm:
                  os.remove(os.path.join(vissimPath, fnm))
-             #endif
              if re.search('[C][1-7]', fnm):
                  os.remove(os.path.join(vissimPath, fnm))
-             #endif
-         #endfor
       except Exception as e:
              print(" Error: can not remove " + fnm)
              print(e)
-      #endtry
       print("removing temp nodes ...!")
       nodes = slicer.util.getNodesByClass('vtkMRMLScalarVolumeNode')
       for f in nodes:
@@ -762,23 +715,12 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
       for f in nodes:
           if "Location" in f.GetName(): f.GetDisplayNode().SetVisibility(False)
-      #endfor
-      ##using dictionary doesn ot work:
-      ##remove temp nodes
-      #nodes = slicer.util.getNodes().keys()
-      #for f in nodes:
-      #    if ("_Crop"    in f): slicer.mrmlScene.RemoveNode(slicer.util.getNodes()[f]);
-      #    #if ("Location" in f): slicer.mrmlScene.RemoveNode(slicer.util.getNodes()[f]);
-      #    if ("Location" in f): slicer.util.getNodes()[f].GetDisplayNode().SetVisibility(False);
-      #    #endif
-      # #endfor
-  #enddef
 
   def rmvSlicerNode(self,node):
     slicer.mrmlScene.RemoveNode(node)
     slicer.mrmlScene.RemoveNode(node.GetDisplayNode())
     slicer.mrmlScene.RemoveNode(node.GetStorageNode())
-  #enddef
+
   # this can be used only if extension is running from GUI
   def msgBox(self,txt):
       #msg = qt.QMessageBox()
@@ -805,10 +747,7 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
              self.vtVars[itemT] = "R"
           else:
              self.vtVars[itemT] = "L"
-          #endif
           #print("side selected is " + self.vtVars[itemT])
-      #endif
-   #enddef
 
   def setVtID(self,idx,inputVolumeNode , inputFiducialNode):
       self.vtVars['vtID']=str(idx)
@@ -846,8 +785,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          #endfor
       else:
          print("inputFiducialNode does not exist")
-      #endif
-  #enddef
 
   # check if vertebra location is available
   def setVtIDfromEdt(self,point,vtID):
@@ -858,27 +795,21 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         print("point changed,  " + str(vtID) + " is selected")
         #TODO: add option to use point from text for cropping
         return isExternalCall
-  #enddef
 
-  # Slicer4 Slicer5 conflict
-  # this part need to be optimized
   # reg =0: no registration, 1: fixed image, 2: moving image
   def locateItem(self, inputVolumeNode, inputPointEdt, reg, vtID):
       self.inputFiducialNodes = []
       for i in range (3):
           self.inputFiducialNodes.append(slicer.vtkMRMLMarkupsFiducialNode())
           # 0 input: 1: fixed, 2:moving
-      #endfor
       if reg ==1:
          regType="F"
       elif reg ==2:
          regType="M"
       else:
          regType=""
-      #endif
       if not hasattr(self, 'vtVars'):
          self.setGlobalVariables(int(not (vtID==0)) )
-      #end
       self.inputVolumeNode   = inputVolumeNode
       self.inputPointEdt =inputPointEdt
       self.vtVars['vtID']= str(vtID)
@@ -889,7 +820,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       if not self.inputVolumeNode:
            print("You need to pick a input volume first before locating vertebra.", file=sys.stderr)
            return -1
-      #endif
       #  Display suitable during locating the vertebra
       disp_logic = slicer.app.layoutManager().sliceWidget(self.vtVars['dispViewTxt']).sliceLogic()
       disp_cn = disp_logic.GetSliceCompositeNode()
@@ -903,8 +833,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
             sliceWidget = layoutManager.sliceWidget(sliceNode.GetLayoutName())
             if sliceWidget:
                 sliceWidget.sliceLogic().FitSliceToAll()
-            #endif
-      #endfor
 
       if vtID==0: #Cochlea:
          print(" ..... getting Cochlea location in the input image")
@@ -913,7 +841,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          # redefine to be used in the logic class.
          print(" ..... getting vertebra location in the input image")
          self.FidLabel= regType+"_vtLocations"
-      #endif
       # Check if a markup node exists
       newNode = True
       nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
@@ -922,8 +849,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                   #replace  current
                   self.inputFiducialNodes[reg] = f
                   newNode= False
-              #endif
-      #endfor
       #this is implemented in setVtID
       if newNode:
             self.inputFiducialNodes[reg] = slicer.vtkMRMLMarkupsFiducialNode()
@@ -942,7 +867,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       self.modObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointModifiedEvent, self.onInputFiducialNodePointModifiedEvent)
       self.rmvObs = self.inputFiducialNodes[reg].AddObserver(self.inputFiducialNodes[reg].PointRemovedEvent, self.onInputFiducialNodePointRemovedEvent)
       return  self.inputFiducialNodes[reg]
-  #enddef
 
   #--------------------------------------------------------------------------------------------
   #    InputFiducialNode PointAddedEvent
@@ -965,7 +889,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       self.inputPointEdt.setText(str(self.inputPoint))
       print(" ..... location RAS: " + str(rasPt))
       print(" ..... location in the input image set to: " + str(self.inputPoint))
-  #enddef
 
   #--------------------------------------------------------------------------------------------
   #    InputFiducialNode PointModifiedEvent
@@ -982,15 +905,10 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          caller.GetNthFiducialPosition(i,rasPt)
          self.inputPoint = self.ptRAS2IJK(caller, self.inputVolumeNode, i)
          self.inputPointEdt.setText(str(self.inputPoint))
-      #endif
-  #enddef
 
   def onInputFiducialNodePointRemovedEvent(self, caller, event):
       #print("Fiducial removed event!")
       caller.RemoveObserver(self.rmvObs)
-      #i = caller.GetNumberOfFiducials()-1
-      #print("number of rmaining fiducials: " + str(i))
-  #endif
 
   #--------------------------------------------------------------------------------------------
   #                        Calculate Segmentation Information
@@ -1059,24 +977,19 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
               tblNode.SetCellText(idx,3,str(segNodeCoM[1]))
               tblNode.SetCellText(idx,4,str(segNodeCoM[2]))
               self.vtVars['segNodeCoM']=str(segNodeCoM)
-              #if  tblNode.GetCellText(tblNode.GetNumberOfRows(),0)=="":
-              #    tblNode.RemoveRow(tblNode.GetNumberOfRows()-1)
-              #endif
-           #endif
-        #endifelse
+
         # update table and set it the active table in slicer
         print("updating table ..............")
         tblNode.Modified()
         slicer.app.applicationLogic().GetSelectionNode().SetActiveTableID(tblNode.GetID())
         slicer.app.applicationLogic().PropagateTableSelection()
         return tblNode
-  #enddef
-
+ 
   #--------------------------------------------------------------------------------------------
   #                        Calculate length and volume of scalas
   #--------------------------------------------------------------------------------------------
   # This function compute the distance between all the fiducials in a markupnode
-  def getFiducilsDistance(self,markupsNode,tblNode):
+  def getFiducilsDistance(self, markupsNode):
         markupsDistance = 0 ; rasPt0 = [0,0,0] ; rasPt1 = [0,0,0] ;
 
         for i in range(0, markupsNode.GetNumberOfFiducials()):
@@ -1086,15 +999,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
                 x0 =rasPt0[0]  ; y0= rasPt0[1]  ; z0=rasPt0[2]
                 x1 =rasPt1[0]  ; y1= rasPt1[1]  ; z1=rasPt1[2]
                 markupsDistance = markupsDistance +  math.sqrt( (x1-x0)**2 + (y1-y0)**2 + (z1-z0)**2 )
-            #endif
-        #endfor
-        self.vtVars['StLength'] = str(markupsDistance)
-        if not tblNode is None:
-           tblNode.SetCellText(0,2,self.vtVars['StLength'])
-        #endif
-
         return markupsDistance
-  #enddef
+
   def fitAllSlicesViews(self):
       sliceNodes = slicer.util.getNodes('vtkMRMLSliceNode*')
       layoutManager = slicer.app.layoutManager()
@@ -1102,10 +1008,8 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
             sliceWidget = layoutManager.sliceWidget(sliceNode.GetLayoutName())
             if sliceWidget:
                 sliceWidget.sliceLogic().FitSliceToAll()
-            #endif
-      #endfor
-  #enddef
-
+ 
+ 
   # An option to control results displaying
 
   def fuseWithOutColor(self, disableColor):
@@ -1113,7 +1017,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       firstNode = slicer.util.getNode(slicer.app.layoutManager().sliceWidget(slicer.app.layoutManager().sliceViewNames()[0]).sliceLogic().GetSliceCompositeNode().GetForegroundVolumeID())
       secondNode = slicer.util.getNode(slicer.app.layoutManager().sliceWidget(slicer.app.layoutManager().sliceViewNames()[0]).sliceLogic().GetSliceCompositeNode().GetBackgroundVolumeID())
       self.fuseTwoImages( firstNode, secondNode , not disableColor)
-  #enddef
 
   #fuse two images with two different colors
   def fuseTwoImages(self, firstNode, secondNode, colorful):
@@ -1123,7 +1026,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       else:
          self.vtVars['nodeColorFG']          = slicer.modules.colors.logic().GetColorTableNodeID(1)  # gray color
          self.vtVars['nodeColorBG']          = slicer.modules.colors.logic().GetColorTableNodeID(1)  # gray color
-      #endif
       #TODO: replace this with a loop or short code
       for i in range(3):
           print(i)
@@ -1131,7 +1033,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
           viewSliceCompositeNode.SetBackgroundVolumeID(firstNode.GetID())
           viewSliceCompositeNode.SetForegroundVolumeID(secondNode.GetID())
           viewSliceCompositeNode.SetForegroundOpacity(0.5)
-      #endfor
 
       # The layout is set to show only the default view.
       slicer.app.layoutManager().setLayout(int(self.vtVars['dispViewID']))
@@ -1147,7 +1048,6 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
 
       # Fit slices to window
       self.fitAllSlicesViews()
-  #enddef
 
   def dispSeg(self,inputVolumeNode, vtSegNode, view):
         lm = slicer.app.layoutManager();
@@ -1169,17 +1069,16 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
         v3DDWidgetV.zoomFactor =3
         v3DDWidgetV.zoomIn()
         v3DDWidgetV.zoomFactor =0.05 # back to default value
-  #enddef
-#endclass 
 
+#===================================================================
+#                           Test Class
+#===================================================================
 class VisSimCommonTest(ScriptedLoadableModuleLogic):
 
   def setUp(self):
     slicer.mrmlScene.Clear(0)
-  #enddef
-
+ 
   def runTest(self):
     self.setUp()
     print(VisSimCommonLogic().tstSum(10,20))
-  #enddef
-#enclass
+ 
