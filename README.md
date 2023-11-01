@@ -50,3 +50,10 @@ Please cite our papers:
 * For sharing private information, dataset, a future project proposal or cooperation, please use the [email](ibr_ex@yahoo.com), use SlicerCochlea in the subject. 
 * It would be nice to share your anonymised cochlea dataset.
 * It would be nice to contribute to this repository!
+
+# License
+
+Copyright 2019, [Dr. Ibraheem AL-Dhamari](https://idhamari.com).
+
+Licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0). 
+
