@@ -263,13 +263,12 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
 # This function convert an IJK point to RAS point
 #  input:  a point vector and volume node
 #  output: a point vector
-  def ptIJK2RAS(self,ptIJK,inputImg): # imgPath or imgNode are supported
+  def ptIJK2RAS(self,ptIJK, inputImg): # imgPath or imgNode are supported
         #TODO: add option for printing
         # create a IJK2RAs transformation matrix
         inputImgNode =inputImg
         if (isinstance(inputImg, str)):
-            inputImgNode = slicer.util.loadVolume( inputImg, returnNode=True)
-         
+            inputImgNode = slicer.util.loadVolume( inputImg)
         ijk2rasM = vtk.vtkMatrix4x4()
         inputImgNode.GetIJKToRASMatrix(ijk2rasM)
         ptRAS=np.zeros((len(ptIJK),3))
@@ -469,13 +468,13 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            #TODO: Get Slicer PATH
            SlicerPath      =  os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
            SlicerBinPath   =  os.path.join(SlicerPath,"Slicer")
-           ResampleBinPath =  os.path.join(SlicerPath,"lib","Slicer-4.11" , "cli-modules","ResampleScalarVolume" )
+           ResampleBinPath =  os.path.join(SlicerPath,"lib","Slicer-5.4" , "cli-modules","ResampleScalarVolume" )
            if sys.platform == 'win32':
                ResampleBinPath + ".exe"
                resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
            else:
                #note: in windows, no need to use --launch
-               resamplingCommand = ResampleBinPath + ".exe"
+               resamplingCommand = ResampleBinPath 
   
            print(resamplingCommand)
            si = None
@@ -969,7 +968,9 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            if (vtID ==7) and (self.vtVars['vtMethodID']== "0"): # for testing
               print("updating COM in table ..............")
               segID = segNode.GetSegmentation().GetSegmentIdBySegmentName("C"+str(vtID))
-              modelNode = segNode.GetClosedSurfaceRepresentation(segID)
+              #modelNode = segNode.GetClosedSurfaceRepresentation(segID)
+              modelNode = segNode.GetClosedSurfaceInternalRepresentation(segID)
+              
               com = vtk.vtkCenterOfMass(); com.SetInputData(modelNode);   com.Update()
               segNodeCoM = com.GetCenter()
               tblNode.SetCellText(idx,2,str(segNodeCoM[0]))
