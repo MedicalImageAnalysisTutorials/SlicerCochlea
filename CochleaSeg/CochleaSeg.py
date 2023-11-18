@@ -4,19 +4,20 @@
 #  Sample cochlea datasets can be downloaded using Slicer Datastore module            #
 #                                                                                     #
 #  Contributers:                                                                      #
-#      - Ibraheem Al-Dhamari, ibraheem.al-dhamari@chaite.de                           #
+#      - Ibraheem Al-Dhamari, ia@idhamari.com                                         #
 #  [1] https://www.slicer.org                                                         #
 #  [2] http://elastix.isi.uu.nl                                                       #
 #  [3] Al-Dhamari et al.,(2018), Automatic Cochlear Length and Volume Size Estimation #
 #       First  International Workshop on Context-Aware Operating                      #
 #       Theater OR 2, MICCAI 2018, Granada Spain.                                     #
-#  [4] Al-Dhamari et al.,(2022), Automatic Cochlea Multimodal 3D Image Segmentation   #
-#      And Analysis Using Atlas-model-based Method (to be published!).
+#  [4] Al-Dhamari et al.,(2023), Automatic Cochlea Multimodal 3D Image Segmentation   #
+#      And Analysis Using Atlas-model-based Method. Cochlea Implant International     #
+#      https://doi.org/10.1080/14670100.2023.2274199                                  #
 #  [5] https://github.com/MedicalImageAnalysisTutorials/SlicerCochlea                 #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 5.0.3                                                                       #
-#  Updated: 20.9.2022                                                                 #
+#  Slicer 5.4.0                                                                       #
+#  Updated: 18.11.2023                                                                #
 #======================================================================================
 # Non Slicer libs
 from __future__ import print_function
@@ -66,9 +67,6 @@ class CochleaSeg(ScriptedLoadableModule):
         self.parent.helpText += self.getDefaultModuleDocumentationLink()
         parent.acknowledgementText = " This work is sponsored by Cochlear as part of COMBS project "
         self.parent = parent
-  #end def init
-#end class CochleaSeg
-
 #===================================================================
 #                           Main Widget
 #===================================================================
@@ -156,7 +154,6 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
     self.updateLengthBtn.toolTip = ('How to use:' ' Run segmentation first. ')
     self.updateLengthBtn.connect('clicked(bool)', self.onUpdateLengthBtnClick)
     self.mainFormLayout.addRow(self.updateLengthBtn )
-  #enddef
 
     self.layout.addStretch(1) # Collapsible button is held in place when collapsing/expanding.
   #------------------------------------------------------------------------
@@ -167,8 +164,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
   def onSideChkBoxChange(self):
       nodes = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
       self.vsc.setItemChk("cochleaSide", self.sideChkBox.checked, "cochleaSide", nodes)
-  #enddef
-
+  
   # Updating the cochlea length if the
   #  the user correct some fiducial points
   def onUpdateLengthBtnClick(self):
@@ -221,16 +217,15 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
              #print("inputFiducialNode exist")
              self.logic.inputFiducialNode = f
              newNode= False
-            #endif
-      #endfor
+
       if not hasattr(self.vsc, 'vtVars'):
          self.vsc.setGlobalVariables(0)
-      #end
+
       self.vsc.locateItem(self.inputSelectorCoBx.currentNode(), self.inputPointEdt, 0 , 0)
       self.logic.inputFiducialNode= self.vsc.inputFiducialNodes[0]
 
       self.inputFiducialBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
-  #enddef
+
 
 
   def onApplyBtnClick(self):
@@ -253,8 +248,7 @@ class CochleaSegWidget(ScriptedLoadableModuleWidget):
       self.runBtn.setText("Run")
       self.runBtn.setStyleSheet("QPushButton{ background-color: DarkSeaGreen  }")
       slicer.app.processEvents()
-  #enddef
-
+  
 #===================================================================
 #                           Logic
 #===================================================================
@@ -337,17 +331,15 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
     if  np.sum(inputPoint)== 0 :
            print("Error: select cochlea point")
            return -1
-    #endif
+
     fnm = os.path.join(self.vsc.vtVars['outputPath'] , inputVolumeNode.GetName()+"_Cochlea_Pos.fcsv")
     sR = slicer.util.saveNode(inputFiducialNode, fnm )
     
     #Remove old resulted nodes
     for node in slicer.util.getNodes():
-         if ( segNodeName   == node): slicer.mrmlScene.RemoveNode(node) #endif
-         if ( transRgNodeName == node): slicer.mrmlScene.RemoveNode(node) #endif
-         if ( transNRgNodeName == node): slicer.mrmlScene.RemoveNode(node) #endif
-          
-     #endfor
+         if ( segNodeName   == node): slicer.mrmlScene.RemoveNode(node)  
+         if ( transRgNodeName == node): slicer.mrmlScene.RemoveNode(node)  
+         if ( transNRgNodeName == node): slicer.mrmlScene.RemoveNode(node)  
  
     inputPointT = self.vsc.v2t(inputPoint)
     
@@ -490,10 +482,8 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
     print("A-value Length Lt" , type(self.vsc.vtVars['AvalueStLtLength']))
     print("A-value Length Oc" , type(self.vsc.vtVars['AvalueStOcLength']))
  
-    #[self.vsc.vtVars['AvalueStLtLength'],self.vsc.vtVars['AvalueStOcLength'] ]
     # Display the result if no error
     # Clear cochlea location labels
-    # TODO 2020: Add scala tympani full length to the table 
     if  (cTInr==0) and (cTRnr==0):
         # change the model type from vtk to stl
         msn=slicer.vtkMRMLModelStorageNode()
@@ -510,17 +500,17 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
            print("creating  ", tableName)    
            spTblNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTableNode")
            spTblNode.SetName(tableName)
-        #endtry
+
         spTblNode = self.vsc.getItemInfo( chSegNode, croppedNode, spTblNode,0)
         for i in range (0,8):
             spTblNode.RemoveColumn(3)
-        #endfor
+
         if spTblNode.GetNumberOfRows()>3:
            spTblNode.RemoveRow(spTblNode.GetNumberOfRows()-2)
            spTblNode.RemoveRow(spTblNode.GetNumberOfRows()-2)
-        #endif
+
         stVol = spTblNode.GetCellText(0,1)
-        svVol = spTblNode.GetCellText(0,3)
+        svVol = spTblNode.GetCellText(1,1)
         spTblNode.AddEmptyRow();          spTblNode.AddEmptyRow()     
         spTblNode.AddEmptyRow();          spTblNode.AddEmptyRow()
         spTblNode.AddEmptyRow()     
@@ -554,7 +544,7 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
         spTblNode.SetCellText(5,2, str( self.vsc.vtVars['AvalueStLtLength'] ) )
         spTblNode.SetCellText(6,2, str( self.vsc.vtVars['AvalueStOcLength'] ) )          
         
-        spTblNode.RemoveRow(spTblNode.GetNumberOfRows())            
+        #spTblNode.RemoveRow(spTblNode.GetNumberOfRows())            
         self.spTblNode=spTblNode
         fnm = os.path.join(self.vsc.vtVars['outputPath'] , spTblNode.GetName()+".tsv")
         sR = slicer.util.saveNode(spTblNode, fnm )
