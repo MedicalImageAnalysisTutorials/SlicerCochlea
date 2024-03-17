@@ -17,13 +17,14 @@ This is a [3D Slicer](https://gaithub.com/Slicer/Slicer) plugin that uses [elast
 
 # Tested on
 
-* Slicer 5.0.3 [for windows](https://slicer-packages.kitware.com/api/v1/file/62d5d2ebe911182f1dc285b2/download) and [for linux](https://slicer-packages.kitware.com/api/v1/file/62cc52d2aa08d161a31c1af2/download). Tested on Windows 10 and Ubuntu 20.04
+* Slicer 5.6, Windows 10 and Ubuntu 20.04
 
 
 This project contains three modules:
 
   1. Cochlea image registration and fusion.
   2. Cochlea image segmentation and analysis.
+  3. VisSimCommon for common functions. 
 
 # How to use:
 

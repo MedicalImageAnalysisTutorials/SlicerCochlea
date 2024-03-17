@@ -6,8 +6,8 @@
 #  [1] https://www.slicer.org                                                         #
 #                                                                                     #
 #-------------------------------------------------------------------------------------#
-#  Slicer 5.4.0                                                                       #
-#  Updated: 18.11.2023                                                                #
+#  Slicer 5.6                                                                         #
+#  Updated: 17.3.2024                                                                 #
 #-------------------------------------------------------------------------------------#
 #TODO: check  Documentation/Nightly/Developers/Tutorials/MigrationGuide               #
 #-------------------------------------------------------------------------------------#
@@ -25,7 +25,7 @@
 
 # Non Slicer libs
 from __future__ import print_function, unicode_literals
-import os, sys, time, re, shutil,  math, unittest, logging, zipfile, platform, subprocess, hashlib
+import os, sys, glob, time, re, shutil,  math, unittest, logging, zipfile, platform, subprocess, hashlib
 from shutil import copyfile
 
 from six.moves.urllib.request import urlretrieve
@@ -75,6 +75,14 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
       print("testing")
       return x+y
 
+  # Get slicer lib path automatically
+  def getSlicerLibPath(SlicerPath):
+      # Search for directories that match the "Slicer-*" pattern within the lib directory
+      slicer_dirs = glob.glob(os.path.join(os.path.join(SlicerPath, "lib"), "Slicer-*"))
+      
+      # Assuming there's only one Slicer directory per installation, take the first match
+      return slicer_dirs[0] 
+  
   # vsExtension = 0: Cochlea, vsExtension = 1: Spine
   def setGlobalVariables(self,vsExtension):
       # define global variables as a dictonary
@@ -196,18 +204,16 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
          print("      Downloading VisSim Tools  ... ")
          try:
                 print("      Downloading VisSimTools others ...")
-                vissimZip = os.path.expanduser("~/VisSimToolsTmp.zip")
-                uFile = urlretrieve(othersWebLink,vissimZip)
+                vissimZip = os.path.join(os.path.expanduser("~"),"VisSimToolsTmp.zip")
+                print("vissimZip: ",vissimZip)
+                uFile = urlretrieve(othersWebLink, vissimZip)
                 print ("     Extracting to user home ")
                 zip_ref = zipfile.ZipFile(vissimZip, 'r')
-                zip_ref.extractall(os.path.expanduser("~/"))
+                zip_ref.extractall(os.path.expanduser("~"))
                 zip_ref.close()
                 #remove the downloaded zip file
                 os.remove(vissimZip)
-                # moved the folder: fix bug related to windows
-                # TODO: bug related to slicer, it works in python interactor but not in the extension
-                shutil.move(os.path.join(os.path.expanduser("~/"),"VisSimToolsCochlea") , os.path.join(os.path.expanduser("~/"),"VisSimTools") )                
-                print ("    done! ")
+                print ("     Extracting to user home ... done! ")
          except Exception as e:
                 print("      Error: can not download and extract VisSimTools ...")
                 print(e)
@@ -463,18 +469,16 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
            SlicerBinPath=""
            ResampleBinPath=""
            ## this produces error in windows
-           #resamplingCommand = slicer.modules.resamplescalarvolume.path
-           #os.system(resamplingCommand)
-           #TODO: Get Slicer PATH
            SlicerPath      =  os.path.abspath(os.path.join(os.path.abspath(os.path.join(os.sys.executable, os.pardir)), os.pardir))
            SlicerBinPath   =  os.path.join(SlicerPath,"Slicer")
-           ResampleBinPath =  os.path.join(SlicerPath,"lib","Slicer-5.4" , "cli-modules","ResampleScalarVolume" )
+           SlicerLibPath = VisSimCommonLogic.getSlicerLibPath(SlicerPath)
+           #ResampleBinPath =  os.path.join(SlicerPath,"lib","Slicer-5.4" , "cli-modules","ResampleScalarVolume" )
+           ResampleBinPath =  os.path.join(SlicerLibPath, "cli-modules","ResampleScalarVolume" )           
+           #ResampleBinPath =  os.path.join(SlicerPath,"lib","Slicer-5.6" , "cli-modules","ResampleScalarVolume" )
+           resamplingCommand = ResampleBinPath 
            if sys.platform == 'win32':
                ResampleBinPath + ".exe"
-               resamplingCommand = SlicerBinPath + " --launch " + ResampleBinPath
-           else:
-               #note: in windows, no need to use --launch
-               resamplingCommand = ResampleBinPath 
+               resamplingCommand = f'"{SlicerBinPath}" --launch "{ResampleBinPath}"'
   
            print(resamplingCommand)
            si = None
@@ -511,15 +515,24 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
   def runElastix(self, elastixBinPath, fixed, moving, output, parameters, verbose, line):
       print ("************  Compute the Transform **********************")
       currentOS = sys.platform
-      print(currentOS)
-      Cmd = elastixBinPath + ' -f ' + fixed + ' -m ' +  moving  + ' -out ' +  output + ' -p ' + parameters
+      print("currentOS: ",currentOS)
+      Cmd = elastixBinPath + " -f " +fixed+" -m "+ moving +" -out "+ output +" -p "+ parameters
+
       errStr="No error!"
       if currentOS in ["win32","msys","cygwin"]:
-          print(" elastix is running in Windows :( !!!")
-          print(Cmd)
-          si = subprocess.STARTUPINFO()
-          si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-          cTI = subprocess.call(Cmd , shell = (sys.platform == currentOS) , startupinfo=si )
+         print(" elastix is running in Windows :( !!!")
+         Cmd = f'"{elastixBinPath}" -f "{fixed}" -m "{moving}" -out "{output}" -p "{parameters}"'
+
+         print(Cmd)
+         Cmd = f'"{elastixBinPath}" -f "{fixed}" -m "{moving}" -out "{output}" -p "{parameters}"'
+         si = subprocess.STARTUPINFO()
+         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+         process = subprocess.Popen(Cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, startupinfo=si)
+         stdout, stderr = process.communicate()
+         cTI = process.returncode
+        #  print(f"STDOUT: {stdout.decode()}")
+        #  print(f"STDERR: {stderr.decode()}")
+      
       elif currentOS in ["linux","linux2"]:
           print(" elastix is running in Linux :) !!!")
           CmdList = Cmd.split()
@@ -553,12 +566,13 @@ class VisSimCommonLogic(ScriptedLoadableModuleLogic):
   def runTransformix(self,transformixBinPath, img, output, parameters, verbose, line):
       print ("************  Apply transform **********************")
       currentOS = sys.platform
-      Cmd = transformixBinPath + ' -tp ' + parameters + ' -in ' +  img  +' -out ' +   output +' -def '+ ' all '
+      Cmd = transformixBinPath + " -tp " + parameters + " -in " + img +" -out " + output + " -def all "
+
       #if subprocess.mswindows:
       errStr="No error!"
-#      if hasattr(subprocess, 'mswindows'):
       if currentOS in ["win32","msys","cygwin"]:
          print(" transformix is running in Windows :( !!!")
+         Cmd = f'"{transformixBinPath}" -tp "{parameters}" -in "{img}" -out "{output}" -def all '
          print(Cmd)
          si = subprocess.STARTUPINFO()
          si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
