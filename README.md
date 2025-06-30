@@ -38,10 +38,11 @@ This project contains three modules:
 
 Please cite our papers:
 
-*  Al-Dhamari I et al. (2023) Automatic Cochlea Multimodal 3D Image Segmentation And Analysis Using Atlas-model-based Method, Cochlear Implants International, DOI: 10.1080/14670100.2023.2274199. [Link](https://www.tandfonline.com/doi/full/10.1080/14670100.2023.2274199) 
-*  Al-Dhamari I, Helal R, Morozova O, Abdelaziz T, Jacob R, et al. (2022) Automatic intra-subject registration and fusion of multimodal cochlea 3D clinical images. PLOS ONE 17(3): e0264449. https://doi.org/10.1371/journal.pone.0264449. [Link](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0264449&type=printable)
-*  Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Roland Jacob, (2018), Automatic Cochlea Multi-modal Images Segmentation Using Adaptive Stochastic Gradient Descent. In: CI2018 DC Emerging Issues in Cochlear Implantation, Washington DC, USA.
-*  Ibraheem Al-Dhamari, Sabine Bauer, Dietrich Paulus, Friedrich Lisseck and Roland Jacob, (2017): ACIR: automatic cochlea image registration. In: Proceedings SPIE Medical Imaging 2017: Image Processing;. SPIE. Bd. 10133. S. 10133p1-10133p5. [link](http://spie.org/Publications/Proceedings/Paper/10.1117/12.2254396)
+* Al-Dhamari et al. (2024) Automatic cochlear multimodal 3D image segmentation and analysis using atlas-model-based method. Cochlear Implants Int. 2024 Jan;25(1):46-58. doi: 10.1080/14670100.2023.2274199. Epub 2023 Nov 3. PMID: 37922404. [Link](https://www.tandfonline.com/doi/full/10.1080/14670100.2023.2274199?rfr_dat=cr_pub++0pubmed&url_ver=Z39.88-2003&rfr_id=ori%3Arid%3Acrossref.org)
+* Al-Dhamari et al. (2023) Automatic Cochlea Multimodal 3D Image Segmentation And Analysis Using Atlas-model-based Method, Cochlear Implants International, DOI: 10.1080/14670100.2023.2274199. [Link](https://www.tandfonline.com/doi/full/10.1080/14670100.2023.2274199) 
+* Al-Dhamari I, Helal R, Morozova O, Abdelaziz T, Jacob R, et al. (2022) Automatic intra-subject registration and fusion of multimodal cochlea 3D clinical images. PLOS ONE 17(3): e0264449. https://doi.org/10.1371/journal.pone.0264449. [Link](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0264449&type=printable)
+* Al-Dhamari et al. (2018), Automatic Cochlea Multi-modal Images Segmentation Using Adaptive Stochastic Gradient Descent. In: CI2018 DC Emerging Issues in Cochlear Implantation, Washington DC, USA.
+* Al-Dhamari et al. (2017): ACIR: automatic cochlea image registration. In: Proceedings SPIE Medical Imaging 2017: Image Processing;. SPIE. Bd. 10133. S. 10133p1-10133p5. [link](http://spie.org/Publications/Proceedings/Paper/10.1117/12.2254396)
 
 # Notes:  
 
