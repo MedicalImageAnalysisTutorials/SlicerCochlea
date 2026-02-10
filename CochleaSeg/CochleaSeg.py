@@ -300,23 +300,24 @@ class CochleaSegLogic(ScriptedLoadableModuleLogic):
     resTransPathOld  = os.path.join(self.vsc.vtVars['outputPath'] ,"TransformParameters.0.txt")
     resTransRgPath=resTransPathOld[0:-6]+'_Rg_Pars.txt'
     resTransNRgPath=resTransPathOld[0:-6]+'_NRg_Pars.txt'
-    
+
+    node_name = inputVolumeNode.GetName()
+
     resOldDefPath = os.path.join(self.vsc.vtVars['outputPath'] , "deformationField"+self.vsc.vtVars['imgType'])
-    resDefRgPath    = os.path.join(self.vsc.vtVars['outputPath'] ,  inputVolumeNode.GetName()+"_Rg_dFld"+self.vsc.vtVars['imgType'])
-    resDefNRgPath    = os.path.join(self.vsc.vtVars['outputPath'] , inputVolumeNode.GetName()+"_NRg_dFld"+self.vsc.vtVars['imgType'])
-    
-    inputImgName  = os.path.basename(os.path.splitext(inputVolumeNode.GetStorageNode().GetFileName())[0])
-    segNodeName   = inputVolumeNode.GetName() + "_S.Seg"
-    
-    stPtNodeName   = inputVolumeNode.GetName() + "_StPts"
-    svPtNodeName   = inputVolumeNode.GetName() + "_SvPts"
-    stLtPtNodeName = inputVolumeNode.GetName() + "_StLtPts"
-    stOcPtNodeName = inputVolumeNode.GetName() + "_StOcPts"
-    avPtNodeName   = inputVolumeNode.GetName() + "_avPts"
-    
-    transRgNodeName = inputVolumeNode.GetName()  + "_Rg_Transform"
-    transNRgNodeName = inputVolumeNode.GetName() + "_NRg_Transform"
-    
+    resDefRgPath    = os.path.join(self.vsc.vtVars['outputPath'] , node_name+"_Rg_dFld"+self.vsc.vtVars['imgType'])
+    resDefNRgPath    = os.path.join(self.vsc.vtVars['outputPath'] , node_name+"_NRg_dFld"+self.vsc.vtVars['imgType'])
+
+    segNodeName   = node_name + "_S.Seg"
+
+    stPtNodeName   = node_name + "_StPts"
+    svPtNodeName   = node_name + "_SvPts"
+    stLtPtNodeName = node_name + "_StLtPts"
+    stOcPtNodeName = node_name + "_StOcPts"
+    avPtNodeName   = node_name + "_avPts"
+
+    transRgNodeName = node_name  + "_Rg_Transform"
+    transNRgNodeName = node_name + "_NRg_Transform"
+
     self.vsc.removeOtputsFolderContents()
       # check if the model is found
     if not os.path.isfile(modelPath):
